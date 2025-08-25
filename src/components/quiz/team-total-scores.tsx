@@ -19,21 +19,27 @@ export function TeamTotalScores() {
 
   useEffect(() => {
     setIsClient(true);
-    // This effect runs only once on the client
-    setPreviewScores(
-      Array.from({ length: 4 }).map((_, i) => ({
-        name: `Team ${i + 1}`,
-        score: Math.floor(Math.random() * 100),
-        height: Math.random() * 60 + 20,
-      }))
-    );
   }, []);
+  
+  useEffect(() => {
+    // This effect runs only once on the client, and only if we are in preview mode
+    if (isClient && numTeams === 0) {
+        setPreviewScores(
+          Array.from({ length: 4 }).map((_, i) => ({
+            name: `Team ${i + 1}`,
+            score: Math.floor(Math.random() * 100),
+            height: Math.random() * 60 + 20,
+          }))
+        );
+    }
+  }, [isClient, numTeams]);
 
 
   // If there are no teams, render a placeholder state for the preview
   if (numTeams === 0) {
-    if (!isClient) {
-        // Render a static skeleton or empty state on the server to avoid hydration errors
+    // On the server, and on the initial client render, show a skeleton.
+    // This prevents the hydration mismatch.
+    if (!isClient || previewScores.length === 0) {
         return (
              <div className={cn(
                 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6',
@@ -41,13 +47,14 @@ export function TeamTotalScores() {
               )}>
                 {Array.from({ length: 4 }).map((_, index) => (
                      <Card key={index} className="shadow-lg animate-pulse">
-                        <CardHeader><CardTitle className="text-2xl h-8 rounded-md bg-muted/50 font-headline text-center">Team {index + 1}</CardTitle></CardHeader>
+                        <CardHeader><CardTitle className="text-2xl h-8 rounded-md bg-muted/50 font-headline text-center"></CardTitle></CardHeader>
                         <CardContent><div className="h-16 w-1/2 mx-auto rounded-md bg-muted/50" /></CardContent>
                      </Card>
                 ))}
               </div>
         )
     }
+    // After the client has mounted and generated preview scores, show the animated preview.
     return (
       <div className={cn(
         'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6',
