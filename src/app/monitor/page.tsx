@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react';
 import { TeamTotalScores } from '@/components/quiz/team-total-scores';
 import { useToast } from '@/hooks/use-toast';
 import { Tv, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
-
+import { RoundScores } from '@/components/quiz/round-scores';
+import { cn } from '@/lib/utils';
 
 export default function MonitorPage() {
   const { quizState } = useQuiz();
@@ -20,6 +21,11 @@ export default function MonitorPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  useEffect(() => {
+    // Add theme class to body
+    document.body.className = ''; // Clear existing classes
+    document.body.classList.add(`theme-${quizState.monitorSettings.theme}`);
+  }, [quizState.monitorSettings.theme]);
 
   const handleVerify = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -91,12 +97,18 @@ export default function MonitorPage() {
   }
 
   return (
-    <main className="container mx-auto p-4 md:p-8">
-      <header className="text-center mb-8">
+    <main className={cn("container mx-auto p-4 md:p-8 space-y-8", quizState.monitorSettings.compact ? "space-y-4" : "space-y-8")}>
+      <header className="text-center">
         <h1 className="text-5xl font-bold font-headline text-primary">Live Scoreboard</h1>
         <p className="text-muted-foreground">Scores update in real-time as they are entered.</p>
       </header>
-      <TeamTotalScores />
+      
+      {quizState.rounds.length > 0 && <RoundScores />}
+
+      <div>
+        <h2 className="text-3xl font-bold font-headline text-center mb-4 text-primary/80">Total Scores</h2>
+        <TeamTotalScores />
+      </div>
     </main>
   );
 }

@@ -9,7 +9,12 @@ export type QuizState = {
   numTeams: number;
   scores: Record<number, Record<number, number>>; // { [questionIndex]: { [teamIndex]: score } }
   activeCell: { question: number; team: number } | null;
-  numQuestions: number;
+  numQuestions: number; // No longer fixed, just a counter
+  rounds: { name: string; scores: Record<number, Record<number, number>> }[];
+  monitorSettings: {
+    theme: string;
+    compact: boolean;
+  };
 };
 
 export const initialState: QuizState = {
@@ -17,7 +22,12 @@ export const initialState: QuizState = {
   numTeams: 0,
   scores: {},
   activeCell: { question: 0, team: 0 },
-  numQuestions: 10,
+  numQuestions: 0,
+  rounds: [],
+  monitorSettings: {
+    theme: 'default',
+    compact: false,
+  },
 };
 
 type QuizContextType = {

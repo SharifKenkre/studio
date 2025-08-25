@@ -7,7 +7,8 @@ body {
 }
 
 @layer base {
-  :root {
+  :root,
+  .theme-default {
     --background: 234 67% 94%;
     --foreground: 231 48% 20%;
     --card: 234 67% 99%;
@@ -33,16 +34,9 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
-  .dark {
+  .dark,
+  .theme-dark {
     --background: 231 20% 12%;
     --foreground: 234 67% 96%;
     --card: 231 20% 15%;
@@ -67,14 +61,78 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+  .theme-forest {
+    --background: 120 25% 95%;
+    --foreground: 120 25% 15%;
+    --card: 120 25% 99%;
+    --card-foreground: 120 25% 15%;
+    --primary: 110 45% 45%;
+    --primary-foreground: 110 45% 95%;
+    --accent: 140 50% 40%;
+  }
+  .theme-ocean {
+    --background: 210 50% 95%;
+    --foreground: 210 50% 15%;
+    --card: 210 50% 99%;
+    --card-foreground: 210 50% 15%;
+    --primary: 200 65% 50%;
+    --primary-foreground: 200 65% 95%;
+    --accent: 220 70% 60%;
+  }
+  .theme-sunset {
+    --background: 30 80% 95%;
+    --foreground: 25 60% 20%;
+    --card: 30 80% 98%;
+    --card-foreground: 25 60% 20%;
+    --primary: 15 85% 60%;
+    --primary-foreground: 15 85% 98%;
+    --accent: 45 90% 55%;
+  }
+  .theme-nebula {
+    --background: 260 30% 10%;
+    --foreground: 260 30% 90%;
+    --card: 260 30% 15%;
+    --card-foreground: 260 30% 90%;
+    --primary: 280 80% 70%;
+    --primary-foreground: 280 80% 10%;
+    --accent: 310 90% 65%;
+  }
+  .theme-meadow {
+    --background: 90 40% 96%;
+    --foreground: 90 30% 20%;
+    --card: 90 40% 99%;
+    --card-foreground: 90 30% 20%;
+    --primary: 80 50% 55%;
+    --primary-foreground: 80 50% 10%;
+    --accent: 120 40% 60%;
+  }
+  .theme-rose {
+    --background: 340 60% 97%;
+    --foreground: 340 40% 25%;
+    --card: 340 60% 99%;
+    --card-foreground: 340 40% 25%;
+    --primary: 330 70% 65%;
+    --primary-foreground: 330 70% 98%;
+    --accent: 350 80% 70%;
+  }
+  .theme-industrial {
+    --background: 240 5% 96%;
+    --foreground: 240 5% 20%;
+    --card: 240 5% 100%;
+    --card-foreground: 240 5% 20%;
+    --primary: 240 3% 50%;
+    --primary-foreground: 240 3% 98%;
+    --accent: 180 2% 40%;
+  }
+  .theme-cyberpunk {
+    --background: 225 15% 9%;
+    --foreground: 198 93% 81%;
+    --card: 225 15% 12%;
+    --card-foreground: 198 93% 81%;
+    --primary: 320 100% 54%;
+    --primary-foreground: 320 100% 98%;
+    --accent: 65 100% 50%;
   }
 }
 
@@ -83,6 +141,6 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-500;
   }
 }

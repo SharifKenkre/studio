@@ -18,7 +18,9 @@ export function ScoringGrid() {
   const activeCellRef = useRef<HTMLTableCellElement>(null);
 
   const teamHeaders = Array.from({ length: numTeams }, (_, i) => i);
-  const questionRows = Array.from({ length: numQuestions }, (_, i) => i);
+  // We need at least one row to show, even if no questions have been answered yet.
+  const questionRows = Array.from({ length: Math.max(1, numQuestions + 1) }, (_, i) => i);
+
 
   useEffect(() => {
     activeCellRef.current?.scrollIntoView({

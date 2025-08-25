@@ -15,15 +15,6 @@ export function PointButtons({ onScore }: PointButtonsProps) {
     const activeTeam = quizState.activeCell ? quizState.activeCell.team + 1 : null;
     const activeQuestion = quizState.activeCell ? quizState.activeCell.question + 1 : null;
 
-  if (!quizState.activeCell) {
-    return (
-        <Card className="text-center p-8">
-            <CardTitle className="font-headline">Ready for next question</CardTitle>
-            <CardDescription>All teams scored for the current question.</CardDescription>
-        </Card>
-    )
-  }
-
   return (
     <Card className="shadow-lg">
       <CardHeader className="text-center">
