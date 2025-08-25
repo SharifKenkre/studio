@@ -18,6 +18,11 @@ const themes = [
 export default function SettingsPage() {
   const { quizState, setQuizState } = useQuiz();
   const router = useRouter();
+  const [previewTheme, setPreviewTheme] = useState(quizState.monitorSettings.theme);
+
+  useEffect(() => {
+    setPreviewTheme(quizState.monitorSettings.theme);
+  }, [quizState.monitorSettings.theme]);
 
   const handleThemeChange = (theme: string) => {
     setQuizState(prev => ({
@@ -84,7 +89,7 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-4">
              <Label className="text-lg font-semibold">Live Preview</Label>
-             <div className={cn("rounded-lg border p-4 transition-all", `theme-${quizState.monitorSettings.theme}`)}>
+             <div className={cn("rounded-lg border p-4 transition-all", previewTheme)}>
                 <TeamTotalScores />
              </div>
           </div>

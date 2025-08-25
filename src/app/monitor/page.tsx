@@ -24,7 +24,7 @@ export default function MonitorPage() {
   useEffect(() => {
     // Add theme class to body
     document.body.className = ''; // Clear existing classes
-    document.body.classList.add(`theme-${quizState.monitorSettings.theme}`);
+    document.body.classList.add(quizState.monitorSettings.theme);
   }, [quizState.monitorSettings.theme]);
 
   const handleVerify = (e: FormEvent<HTMLFormElement>) => {
