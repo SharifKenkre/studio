@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useQuiz } from '@/contexts/quiz-context';
@@ -226,10 +227,14 @@ export default function SettingsPage() {
                 <div className="space-y-2 rounded-lg border p-4 bg-background">
                      <Label className="text-base font-semibold">Verification Code</Label>
                      <div className="flex items-center justify-center gap-2">
-                        <p className="text-4xl font-bold font-mono tracking-widest text-primary">
-                            {quizState.verificationCode}
-                        </p>
-                        <Button variant="ghost" size="icon" onClick={handleCopyCode}><Copy className="h-5 w-5"/></Button>
+                        {isClient && (
+                          <>
+                            <p className="text-4xl font-bold font-mono tracking-widest text-primary">
+                                {quizState.verificationCode}
+                            </p>
+                            <Button variant="ghost" size="icon" onClick={handleCopyCode}><Copy className="h-5 w-5"/></Button>
+                          </>
+                        )}
                     </div>
                 </div>
                 <AlertDialog>
@@ -264,3 +269,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
