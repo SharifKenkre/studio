@@ -36,12 +36,17 @@ export default function PrimaryPage() {
   const { toast } = useToast();
   const [roundName, setRoundName] = useState('');
   const [isEndRoundAlertOpen, setIsEndRoundAlertOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    if (!quizState.verificationCode) {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && !quizState.verificationCode) {
       router.push('/');
     }
-  }, [quizState.verificationCode, router]);
+  }, [quizState.verificationCode, router, isClient]);
 
   const handleNewCode = () => {
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -66,7 +71,7 @@ export default function PrimaryPage() {
         numTeams: teams,
         activeCell: { question: 0, team: 0 },
         scores: {},
-        rounds: [],
+        rounds: prev.rounds || [],
         numQuestions: 0,
       }));
     } else {
@@ -97,9 +102,10 @@ export default function PrimaryPage() {
       if (nextTeam >= prev.numTeams) {
         nextTeam = 0;
         nextQuestion = question + 1;
-        if (nextQuestion > newNumQuestions) {
+      }
+      
+      if (nextQuestion > newNumQuestions) {
           newNumQuestions = nextQuestion;
-        }
       }
 
       const newActiveCell = { question: nextQuestion, team: nextTeam };
@@ -132,10 +138,10 @@ export default function PrimaryPage() {
     toast({ title: 'Round Ended', description: `Round "${roundName}" has been saved.` });
   };
   
-  if (!quizState.verificationCode) {
+  if (!isClient || !quizState.verificationCode) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p>Redirecting...</p>
+        <p>Loading...</p>
       </div>
     );
   }
@@ -176,7 +182,7 @@ export default function PrimaryPage() {
   }
   
   const numScoredInQuestion = quizState.activeCell ? Object.keys(quizState.scores[quizState.activeCell.question] || {}).length : quizState.numTeams;
-  const progress = quizState.activeCell ? (numScoredInQuestion / quizState.numTeams) * 100 : 100;
+  const progress = quizState.activeCell && quizState.numTeams > 0 ? (numScoredInQuestion / quizState.numTeams) * 100 : 0;
 
   return (
     <div className="flex flex-col h-screen p-4 gap-4">
