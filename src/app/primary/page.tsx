@@ -29,6 +29,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { PingIndicator } from '@/components/quiz/ping-indicator';
+
 
 export default function PrimaryPage() {
   const { quizState, setQuizState, initialState } = useQuiz();
@@ -187,7 +189,10 @@ export default function PrimaryPage() {
   return (
     <div className="flex flex-col h-screen p-4 gap-4">
       <header className="flex-shrink-0 flex items-center justify-between">
-        <h1 className="text-2xl font-bold font-headline">Scoring</h1>
+        <div className="flex items-center gap-2">
+            <PingIndicator />
+            <h1 className="text-2xl font-bold font-headline">Scoring</h1>
+        </div>
         <div className="flex items-center gap-4">
             <div className="text-right">
                 <p className="text-sm text-muted-foreground">Question Progress</p>
