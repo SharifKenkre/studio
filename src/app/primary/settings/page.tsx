@@ -17,15 +17,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CustomTheme, hexToHsl, hslToHex } from '@/lib/theme';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 
 const themes = ['default', 'dark', 'light'];
 
