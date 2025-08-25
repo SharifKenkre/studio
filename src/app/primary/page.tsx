@@ -121,7 +121,7 @@ export default function PrimaryPage() {
       
       return {
         ...prev,
-        rounds: [...prev.rounds, roundToAdd],
+        rounds: [...(prev.rounds || []), roundToAdd],
         scores: {},
         activeCell: { question: 0, team: 0 },
         numQuestions: 0,
@@ -225,7 +225,7 @@ export default function PrimaryPage() {
                         id="round-name"
                         value={roundName}
                         onChange={(e) => setRoundName(e.target.value)}
-                        placeholder={`e.g., Round ${quizState.rounds.length + 1}`}
+                        placeholder={`e.g., Round ${quizState.rounds?.length + 1}`}
                     />
                 </div>
                 <AlertDialogFooter>
