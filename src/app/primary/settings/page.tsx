@@ -84,10 +84,8 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-4">
              <Label className="text-lg font-semibold">Live Preview</Label>
-             <div className={cn("rounded-lg border bg-background p-4 transition-all", `theme-${quizState.monitorSettings.theme}`)}>
-                <div className={quizState.monitorSettings.theme}>
-                    <TeamTotalScores />
-                </div>
+             <div className={cn("rounded-lg border p-4 transition-all", `theme-${quizState.monitorSettings.theme}`)}>
+                <TeamTotalScores />
              </div>
           </div>
         </CardContent>
