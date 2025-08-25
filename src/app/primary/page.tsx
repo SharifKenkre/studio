@@ -209,11 +209,7 @@ export default function PrimaryPage() {
       
       <footer className="flex-shrink-0">
         <PointButtons onScore={handleScore} />
-        <div className="mt-4 flex justify-between items-center">
-            <Button onClick={() => setQuizState(initialState)} variant="destructive">
-                End Quiz
-            </Button>
-
+        <div className="mt-4 flex justify-end items-center">
             <AlertDialog open={isEndRoundAlertOpen} onOpenChange={setIsEndRoundAlertOpen}>
               <AlertDialogTrigger asChild>
                 <Button variant="secondary">End Round</Button>
