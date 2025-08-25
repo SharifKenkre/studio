@@ -21,12 +21,6 @@ export default function MonitorPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  useEffect(() => {
-    // Add theme class to body
-    document.body.className = ''; // Clear existing classes
-    document.body.classList.add(quizState.monitorSettings.theme);
-  }, [quizState.monitorSettings.theme]);
-
   const handleVerify = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (inputCode === quizState.verificationCode) {
@@ -97,7 +91,7 @@ export default function MonitorPage() {
   }
 
   return (
-    <main className={cn("container mx-auto p-4 md:p-8 space-y-8", quizState.monitorSettings.compact ? "space-y-4" : "space-y-8")}>
+    <main className={cn("container mx-auto p-4 md:p-8", quizState.monitorSettings.compact ? "space-y-4" : "space-y-8")}>
       <header className="text-center">
         <h1 className="text-5xl font-bold font-headline text-primary">Live Scoreboard</h1>
         <p className="text-muted-foreground">Scores update in real-time as they are entered.</p>

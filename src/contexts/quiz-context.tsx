@@ -1,6 +1,7 @@
 'use client';
 
 import { useSyncedState } from '@/hooks/use-synced-state';
+import type { CustomTheme } from '@/lib/theme';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { createContext, useContext } from 'react';
 
@@ -14,6 +15,7 @@ export type QuizState = {
   monitorSettings: {
     theme: string;
     compact: boolean;
+    customTheme?: CustomTheme;
   };
 };
 
@@ -27,6 +29,11 @@ export const initialState: QuizState = {
   monitorSettings: {
     theme: 'default',
     compact: false,
+    customTheme: {
+      background: '234 67% 94%',
+      card: '234 67% 99%',
+      primary: '231 48% 48%',
+    },
   },
 };
 

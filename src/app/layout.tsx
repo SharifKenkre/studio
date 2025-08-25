@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { QuizProvider } from '@/contexts/quiz-context';
 import { Toaster } from '@/components/ui/toaster';
+import { ThemeManager } from '@/components/quiz/theme-manager';
 
 export const metadata: Metadata = {
   title: 'QuizPoint Central',
@@ -23,9 +24,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased">
+      <body>
         <QuizProvider>
-          {children}
+          <ThemeManager>
+            {children}
+          </ThemeManager>
         </QuizProvider>
         <Toaster />
       </body>
