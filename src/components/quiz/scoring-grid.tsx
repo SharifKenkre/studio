@@ -36,7 +36,7 @@ export function ScoringGrid() {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px] font-headline">Question</TableHead>
-            {teamNames.map((name, teamIndex) => (
+            {teamNames && teamNames.map((name, teamIndex) => (
               <TableHead key={teamIndex} className="text-center font-headline">
                 {name}
               </TableHead>
