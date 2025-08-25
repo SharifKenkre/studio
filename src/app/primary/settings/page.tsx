@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Copy, Monitor, Palette, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Copy, Monitor, Palette, AlertTriangle, Users, Pencil } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { TeamTotalScores } from '@/components/quiz/team-total-scores';
 import {
@@ -32,6 +32,7 @@ import { useState } from 'react';
 import { CustomTheme, hexToHsl, hslToHex } from '@/lib/theme';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
 
 const themes = ['default', 'dark', 'light'];
 
@@ -46,6 +47,21 @@ export default function SettingsPage() {
       primary: '231 48% 48%',
     }
   );
+
+  const handleQuizTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuizState(prev => ({
+        ...prev,
+        quizTitle: e.target.value
+    }));
+  };
+
+  const handleTeamNameChange = (index: number, newName: string) => {
+    setQuizState(prev => {
+        const newTeamNames = [...prev.teamNames];
+        newTeamNames[index] = newName;
+        return { ...prev, teamNames: newTeamNames };
+    });
+  };
 
   const handleThemeChange = (theme: string) => {
     setQuizState(prev => ({
@@ -101,80 +117,89 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-6">
+            
             <div className="space-y-4">
-              <Label className="text-lg font-semibold">Verification Code</Label>
-               <div className="flex items-center justify-center gap-2 p-3 rounded-lg border bg-background">
-                  <p className="text-4xl font-bold font-mono tracking-widest text-primary">
-                      {quizState.verificationCode}
-                  </p>
-                  <Button variant="ghost" size="icon" onClick={handleCopyCode}><Copy className="h-5 w-5"/></Button>
+              <Label className="text-lg font-semibold flex items-center gap-2"><Pencil /> General</Label>
+              <div className="space-y-2">
+                <Label htmlFor="quiz-title">Quiz Title</Label>
+                <Input id="quiz-title" value={quizState.quizTitle} onChange={handleQuizTitleChange} />
+              </div>
+               <div className="space-y-2">
+                <Label>Team Names</Label>
+                <div className="grid grid-cols-2 gap-2">
+                    {quizState.teamNames.map((name, index) => (
+                        <Input key={index} value={name} onChange={(e) => handleTeamNameChange(index, e.target.value)} />
+                    ))}
+                </div>
               </div>
             </div>
-            <div>
-              <Label className="text-lg font-semibold">Theme</Label>
-              <p className="text-sm text-muted-foreground mb-4">Select a color theme for all screens.</p>
-              <div className="grid grid-cols-2 gap-2">
-                {themes.map(theme => (
-                  <Button
-                    key={theme}
-                    variant={quizState.monitorSettings.theme === theme ? 'default' : 'outline'}
-                    onClick={() => handleThemeChange(theme)}
-                    className="capitalize"
-                  >
-                    {theme}
-                  </Button>
-                ))}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant={quizState.monitorSettings.theme === 'custom' ? 'default' : 'outline'}>
-                      <Palette className="mr-2" /> Custom
+
+            <Separator />
+            
+            <div className="space-y-4">
+                <Label className="text-lg font-semibold flex items-center gap-2"><Palette /> Appearance</Label>
+                 <div className="grid grid-cols-2 gap-2">
+                    {themes.map(theme => (
+                    <Button
+                        key={theme}
+                        variant={quizState.monitorSettings.theme === theme ? 'default' : 'outline'}
+                        onClick={() => handleThemeChange(theme)}
+                        className="capitalize"
+                    >
+                        {theme}
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Create Custom Theme</DialogTitle>
-                      <DialogDescription>
-                        Pick your own colors to create a unique theme.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="flex items-center justify-between">
-                        <Label>Background Color</Label>
-                        <Input
-                          type="color"
-                          value={hslToHex(customTheme.background)}
-                          onChange={(e) => handleCustomThemeChange('background', hexToHsl(e.target.value))}
-                          className="w-24"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label>Card Color</Label>
-                        <Input
-                          type="color"
-                          value={hslToHex(customTheme.card)}
-                          onChange={(e) => handleCustomThemeChange('card', hexToHsl(e.target.value))}
-                          className="w-24"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Label>Primary/Accent Color</Label>
-                         <Input
-                          type="color"
-                          value={hslToHex(customTheme.primary)}
-                          onChange={(e) => handleCustomThemeChange('primary', hexToHsl(e.target.value))}
-                          className="w-24"
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={applyCustomTheme}>Apply Custom Theme</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
+                    ))}
+                    <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant={quizState.monitorSettings.theme === 'custom' ? 'default' : 'outline'}>
+                        <Palette className="mr-2" /> Custom
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                        <DialogTitle>Create Custom Theme</DialogTitle>
+                        <DialogDescription>
+                            Pick your own colors to create a unique theme.
+                        </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                        <div className="flex items-center justify-between">
+                            <Label>Background Color</Label>
+                            <Input
+                            type="color"
+                            value={hslToHex(customTheme.background)}
+                            onChange={(e) => handleCustomThemeChange('background', hexToHsl(e.target.value))}
+                            className="w-24"
+                            />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label>Card Color</Label>
+                            <Input
+                            type="color"
+                            value={hslToHex(customTheme.card)}
+                            onChange={(e) => handleCustomThemeChange('card', hexToHsl(e.target.value))}
+                            className="w-24"
+                            />
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label>Primary/Accent Color</Label>
+                            <Input
+                            type="color"
+                            value={hslToHex(customTheme.primary)}
+                            onChange={(e) => handleCustomThemeChange('primary', hexToHsl(e.target.value))}
+                            className="w-24"
+                            />
+                        </div>
+                        </div>
+                        <DialogFooter>
+                        <Button onClick={applyCustomTheme}>Apply Custom Theme</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                    </Dialog>
+                </div>
             </div>
+
             <div className="space-y-4">
-              <Label className="text-lg font-semibold">Layout</Label>
                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
                 <div className="space-y-0.5">
                     <Label>Compact Mode</Label>
@@ -188,8 +213,20 @@ export default function SettingsPage() {
                 />
                </div>
             </div>
-             <div className="space-y-4 pt-4 border-t">
-              <Label className="text-lg font-semibold text-destructive">Danger Zone</Label>
+
+            <Separator />
+            
+             <div className="space-y-4 pt-4">
+                <Label className="text-lg font-semibold text-destructive flex items-center gap-2"><AlertTriangle /> Danger Zone</Label>
+                <div className="space-y-2 rounded-lg border p-4 bg-background">
+                     <Label className="text-base font-semibold">Verification Code</Label>
+                     <div className="flex items-center justify-center gap-2">
+                        <p className="text-4xl font-bold font-mono tracking-widest text-primary">
+                            {quizState.verificationCode}
+                        </p>
+                        <Button variant="ghost" size="icon" onClick={handleCopyCode}><Copy className="h-5 w-5"/></Button>
+                    </div>
+                </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="destructive" className="w-full">

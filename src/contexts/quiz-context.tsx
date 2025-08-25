@@ -7,7 +7,9 @@ import { createContext, useContext } from 'react';
 
 export type QuizState = {
   verificationCode: string | null;
+  quizTitle: string;
   numTeams: number;
+  teamNames: string[];
   scores: Record<number, Record<number, number>>; // { [questionIndex]: { [teamIndex]: score } }
   activeCell: { question: number; team: number } | null;
   numQuestions: number; // No longer fixed, just a counter
@@ -21,7 +23,9 @@ export type QuizState = {
 
 export const initialState: QuizState = {
   verificationCode: null,
+  quizTitle: 'Live Scoreboard',
   numTeams: 0,
+  teamNames: [],
   scores: {},
   activeCell: { question: 0, team: 0 },
   numQuestions: 0,

@@ -14,7 +14,7 @@ import { useEffect, useRef } from 'react';
 
 export function ScoringGrid() {
   const { quizState } = useQuiz();
-  const { numTeams, numQuestions, scores, activeCell } = quizState;
+  const { numTeams, numQuestions, scores, activeCell, teamNames } = quizState;
   const activeCellRef = useRef<HTMLTableCellElement>(null);
 
   const teamHeaders = Array.from({ length: numTeams }, (_, i) => i);
@@ -36,9 +36,9 @@ export function ScoringGrid() {
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px] font-headline">Question</TableHead>
-            {teamHeaders.map(teamIndex => (
+            {teamNames.map((name, teamIndex) => (
               <TableHead key={teamIndex} className="text-center font-headline">
-                Team {teamIndex + 1}
+                {name}
               </TableHead>
             ))}
           </TableRow>

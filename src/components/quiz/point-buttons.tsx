@@ -12,7 +12,8 @@ interface PointButtonsProps {
 
 export function PointButtons({ onScore }: PointButtonsProps) {
     const { quizState } = useQuiz();
-    const activeTeam = quizState.activeCell ? quizState.activeCell.team + 1 : null;
+    const activeTeamIndex = quizState.activeCell ? quizState.activeCell.team : null;
+    const activeTeamName = activeTeamIndex !== null ? quizState.teamNames[activeTeamIndex] : '';
     const activeQuestion = quizState.activeCell ? quizState.activeCell.question + 1 : null;
 
   if (!quizState.activeCell) {
@@ -28,7 +29,7 @@ export function PointButtons({ onScore }: PointButtonsProps) {
     <Card className="shadow-lg">
       <CardHeader className="text-center">
         <CardTitle className="font-headline">
-          Scoring Question {activeQuestion} for Team {activeTeam}
+          Scoring Question {activeQuestion} for {activeTeamName}
         </CardTitle>
         <CardDescription>Select a point value to assign.</CardDescription>
       </CardHeader>

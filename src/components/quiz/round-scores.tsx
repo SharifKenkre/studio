@@ -14,13 +14,11 @@ import { cn } from '@/lib/utils';
 
 export function RoundScores() {
   const { quizState } = useQuiz();
-  const { numTeams, rounds } = quizState;
+  const { numTeams, rounds, teamNames } = quizState;
 
   if (!rounds || rounds.length === 0) {
     return null;
   }
-
-  const teamHeaders = Array.from({ length: numTeams }, (_, i) => i);
   
   const roundTotals = rounds.map(round => {
     return Array.from({ length: numTeams }, (_, teamIndex) => {
@@ -43,9 +41,9 @@ export function RoundScores() {
                     <TableHeader>
                     <TableRow>
                         <TableHead className="font-headline">Round</TableHead>
-                        {teamHeaders.map(teamIndex => (
+                        {teamNames.map((name, teamIndex) => (
                         <TableHead key={teamIndex} className="text-center font-headline">
-                            Team {teamIndex + 1}
+                            {name}
                         </TableHead>
                         ))}
                     </TableRow>

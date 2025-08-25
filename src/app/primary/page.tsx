@@ -70,6 +70,7 @@ export default function PrimaryPage() {
       setQuizState((prev) => ({
         ...prev,
         numTeams: teams,
+        teamNames: Array.from({ length: teams }, (_, i) => `Team ${i + 1}`),
         activeCell: { question: 0, team: 0 },
         scores: {},
         rounds: prev.rounds || [],

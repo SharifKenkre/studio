@@ -93,7 +93,7 @@ export default function MonitorPage() {
   return (
     <main className={cn("container mx-auto p-4 md:p-8", quizState.monitorSettings.compact ? "space-y-4" : "space-y-8")}>
       <header className="text-center relative">
-        <h1 className="text-5xl font-bold font-headline text-primary">Live Scoreboard</h1>
+        <h1 className="text-5xl font-bold font-headline text-primary">{quizState.quizTitle}</h1>
         <p className="text-muted-foreground">Scores update in real-time as they are entered.</p>
       </header>
       
