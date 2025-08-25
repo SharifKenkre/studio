@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CustomTheme, hexToHsl, hslToHex } from '@/lib/theme';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -40,6 +40,7 @@ export default function SettingsPage() {
   const { quizState, setQuizState, initialState } = useQuiz();
   const router = useRouter();
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
   const [customTheme, setCustomTheme] = useState<CustomTheme>(
     quizState.monitorSettings.customTheme || {
       background: '234 67% 94%',
@@ -47,6 +48,10 @@ export default function SettingsPage() {
       primary: '231 48% 48%',
     }
   );
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleQuizTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuizState(prev => ({
@@ -127,7 +132,7 @@ export default function SettingsPage() {
                <div className="space-y-2">
                 <Label>Team Names</Label>
                 <div className="grid grid-cols-2 gap-2">
-                    {quizState.teamNames.map((name, index) => (
+                    {isClient && quizState.teamNames.map((name, index) => (
                         <Input key={index} value={name} onChange={(e) => handleTeamNameChange(index, e.target.value)} />
                     ))}
                 </div>
