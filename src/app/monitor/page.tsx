@@ -13,7 +13,6 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { RoundScores } from '@/components/quiz/round-scores';
 import { cn } from '@/lib/utils';
-import { PingIndicator } from '@/components/quiz/ping-indicator';
 
 export default function MonitorPage() {
   const { quizState } = useQuiz();
@@ -94,9 +93,6 @@ export default function MonitorPage() {
   return (
     <main className={cn("container mx-auto p-4 md:p-8", quizState.monitorSettings.compact ? "space-y-4" : "space-y-8")}>
       <header className="text-center relative">
-        <div className="absolute top-0 left-0">
-          <PingIndicator />
-        </div>
         <h1 className="text-5xl font-bold font-headline text-primary">Live Scoreboard</h1>
         <p className="text-muted-foreground">Scores update in real-time as they are entered.</p>
       </header>
