@@ -11,7 +11,7 @@ export function TeamTotalScores() {
   const teamTotals = Array.from({ length: numTeams }, (_, teamIndex) => {
     let total = 0;
     // Add scores from completed rounds
-    rounds.forEach(round => {
+    (rounds || []).forEach(round => {
         Object.values(round.scores).forEach(questionScores => {
             total += questionScores[teamIndex] || 0;
         });

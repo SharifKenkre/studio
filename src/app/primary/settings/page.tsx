@@ -18,23 +18,6 @@ const themes = [
 export default function SettingsPage() {
   const { quizState, setQuizState } = useQuiz();
   const router = useRouter();
-  const [previewBody, setPreviewBody] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    // We need to get the body of the preview iframe to apply theme changes
-    const iframe = document.getElementById('preview-iframe') as HTMLIFrameElement;
-    if (iframe?.contentWindow?.document?.body) {
-      setPreviewBody(iframe.contentWindow.document.body);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (previewBody) {
-      previewBody.className = '';
-      previewBody.classList.add(`theme-${quizState.monitorSettings.theme}`);
-    }
-  }, [quizState.monitorSettings.theme, previewBody]);
-
 
   const handleThemeChange = (theme: string) => {
     setQuizState(prev => ({
@@ -102,7 +85,9 @@ export default function SettingsPage() {
           <div className="space-y-4">
              <Label className="text-lg font-semibold">Live Preview</Label>
              <div className={cn("rounded-lg border bg-background p-4 transition-all", `theme-${quizState.monitorSettings.theme}`)}>
-                <TeamTotalScores />
+                <div className={quizState.monitorSettings.theme}>
+                    <TeamTotalScores />
+                </div>
              </div>
           </div>
         </CardContent>

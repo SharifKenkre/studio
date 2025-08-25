@@ -16,7 +16,7 @@ export function RoundScores() {
   const { quizState } = useQuiz();
   const { numTeams, rounds } = quizState;
 
-  if (rounds.length === 0) {
+  if (!rounds || rounds.length === 0) {
     return null;
   }
 
