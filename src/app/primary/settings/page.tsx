@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Copy, Monitor, Palette, AlertTriangle, Users, Pencil, Star } from 'lucide-react';
+import { ArrowLeft, Copy, Monitor, Palette, AlertTriangle, Users, Pencil, Star, Download } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { TeamTotalScores } from '@/components/quiz/team-total-scores';
 import {
@@ -34,6 +34,7 @@ import { CustomTheme, hexToHsl, hslToHex } from '@/lib/theme';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { exportToCsv } from '@/lib/csv';
 
 const themes = ['default', 'dark', 'light'];
 
@@ -115,6 +116,16 @@ export default function SettingsPage() {
   const handleEndQuiz = () => {
     setQuizState(initialState);
     router.push('/');
+  }
+
+  const handleExport = () => {
+    try {
+        exportToCsv(quizState);
+        toast({ title: 'Export Successful', description: 'Your quiz data has been downloaded as a CSV file.' });
+    } catch(e) {
+        toast({ variant: 'destructive', title: 'Export Failed', description: 'Could not export quiz data.' });
+        console.error(e);
+    }
   }
 
   return (
@@ -243,6 +254,9 @@ export default function SettingsPage() {
             
              <div className="space-y-4 pt-4">
                 <Label className="text-lg font-semibold text-destructive flex items-center gap-2"><AlertTriangle /> Danger Zone</Label>
+                 <Button variant="secondary" className="w-full" onClick={handleExport}>
+                    <Download className="mr-2 h-4 w-4" /> Export to Excel (.csv)
+                </Button>
                 <div className="space-y-2 rounded-lg border p-4 bg-background">
                      <Label className="text-base font-semibold">Verification Code</Label>
                      <div className="flex items-center justify-center gap-2">

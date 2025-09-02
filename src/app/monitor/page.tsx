@@ -96,13 +96,14 @@ export default function MonitorPage() {
         <h1 className="text-5xl font-bold font-headline text-primary">{quizState.quizTitle}</h1>
         <p className="text-muted-foreground">Scores update in real-time as they are entered.</p>
       </header>
-      
-      {(quizState.rounds || []).length > 0 && <RoundScores />}
 
       <div>
         <h2 className="text-3xl font-bold font-headline text-center mb-4 text-primary/80">Total Scores</h2>
         <TeamTotalScores />
       </div>
+      
+      {(quizState.rounds || []).length > 0 && <RoundScores />}
+
     </main>
   );
 }
