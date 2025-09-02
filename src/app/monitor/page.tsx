@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useQuiz } from '@/contexts/quiz-context';
@@ -91,19 +92,23 @@ export default function MonitorPage() {
   }
 
   return (
-    <main className={cn("container mx-auto p-4 md:p-8", quizState.monitorSettings.compact ? "space-y-4" : "space-y-8")}>
+    <main className={cn("flex-grow p-4 md:p-8", quizState.monitorSettings.compact ? "space-y-4" : "space-y-8")}>
       <header className="text-center relative">
         <h1 className="text-5xl font-bold font-headline text-primary">{quizState.quizTitle}</h1>
         <p className="text-muted-foreground">Scores update in real-time as they are entered.</p>
       </header>
 
-      <div>
-        <h2 className="text-3xl font-bold font-headline text-center mb-4 text-primary/80">Total Scores</h2>
+      <div className="w-full max-w-7xl mx-auto">
         <TeamTotalScores />
       </div>
       
-      {(quizState.rounds || []).length > 0 && <RoundScores />}
+      {(quizState.rounds || []).length > 0 && (
+         <div className="w-full max-w-7xl mx-auto">
+            <RoundScores />
+        </div>
+      )}
 
     </main>
   );
 }
+

@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { QuizProvider } from '@/contexts/quiz-context';
@@ -24,7 +25,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>
+      <body className="flex flex-col min-h-screen">
         <QuizProvider>
           <ThemeManager>
             {children}

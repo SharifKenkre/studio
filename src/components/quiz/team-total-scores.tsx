@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useQuiz } from '@/contexts/quiz-context';
@@ -60,27 +61,25 @@ export function TeamTotalScores() {
     );
   }, []);
 
+  const gridClasses = cn(
+    'grid gap-4 md:gap-6',
+    monitorSettings.compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+  );
+
+
   // Before the client has mounted, render a skeleton UI to match the server
   if (!isMounted) {
     return (
-        <div className={cn(
-          'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6',
-          monitorSettings.compact && 'gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5'
-        )}>
+        <div className={gridClasses}>
           {Array.from({ length: 4 }).map((_, index) => <SkeletonCard key={index} />)}
         </div>
     );
   }
   
-  const commonGridClasses = cn(
-    'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6',
-    monitorSettings.compact && 'gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5'
-  );
-
   // If there are no teams, render the client-side generated preview state
   if (numTeams === 0) {
     return (
-      <div className={commonGridClasses}>
+      <div className={gridClasses}>
         {previewScores.map((preview, index) => (
             <TeamScoreCard 
                 key={index} 
@@ -110,7 +109,7 @@ export function TeamTotalScores() {
   const maxScore = Math.max(...teamTotals, 1); // Use 1 to avoid division by zero
 
   return (
-    <div className={commonGridClasses}>
+    <div className={gridClasses}>
       {teamTotals.map((total, index) => (
          <TeamScoreCard 
             key={index} 
@@ -123,3 +122,4 @@ export function TeamTotalScores() {
     </div>
   );
 }
+
