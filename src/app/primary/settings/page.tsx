@@ -71,25 +71,46 @@ export default function SettingsPage() {
   };
   
   const handlePointValueChange = (indexToChange: number, newValue: string) => {
-    const parsedValue = parseInt(newValue, 10);
-    // Only update if it's a valid number
-    if (!isNaN(parsedValue)) {
-      setQuizState(prev => {
-        const newPointValues = [...prev.pointValues];
-        let numericIndex = -1;
-        // Find the Nth numeric value in the array
-        for(let i = 0; i < newPointValues.length; i++) {
+    setQuizState(prev => {
+      const newPointValues = [...prev.pointValues];
+      const numericPointValues = newPointValues.filter(v => typeof v === 'number');
+      const wicketValue = newPointValues.find(v => v === 'WICKET');
+
+      if (newValue === '') {
+        // Allow clearing the input, but don't save an empty value
+        // We can maybe represent it as a temporary state if needed,
+        // but for now, we'll just let the input be empty.
+        // Let's ensure we find the right global index.
+         let numericIndex = -1;
+         for(let i = 0; i < newPointValues.length; i++) {
             if(typeof newPointValues[i] === 'number') {
                 numericIndex++;
                 if(numericIndex === indexToChange) {
-                    newPointValues[i] = parsedValue;
+                    newPointValues[i] = ''; // Temporarily empty
                     break;
                 }
             }
         }
-        return { ...prev, pointValues: newPointValues };
-      });
-    }
+      } else {
+        const parsedValue = parseInt(newValue, 10);
+        if (!isNaN(parsedValue)) {
+            let numericIndex = -1;
+            for(let i = 0; i < newPointValues.length; i++) {
+                if(typeof newPointValues[i] === 'number' || newPointValues[i] === '') {
+                    numericIndex++;
+                    if(numericIndex === indexToChange) {
+                        newPointValues[i] = parsedValue;
+                        break;
+                    }
+                }
+            }
+        }
+      }
+       
+      // Filter out empty strings before final state update
+      const cleanedPointValues = newPointValues.filter(v => v !== '');
+      return { ...prev, pointValues: cleanedPointValues };
+    });
   };
 
   const addPointValue = () => {
@@ -212,9 +233,9 @@ export default function SettingsPage() {
                 </div>
                 <div className="grid grid-cols-4 gap-2">
                     {isClient && numericPointValues.map((value, index) => (
-                        <div key={index} className="relative group">
+                        <div key={`point-value-${index}`} className="relative group">
                             <Input 
-                                type="number" 
+                                type="text"
                                 value={value} 
                                 onChange={(e) => handlePointValueChange(index, e.target.value)} 
                                 className="text-center pr-6" 
@@ -368,5 +389,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
