@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Copy, Monitor, Palette, AlertTriangle, Users, Pencil, Star, Download, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Monitor, Palette, AlertTriangle, Users, Pencil, Star, Download, PlusCircle, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { TeamTotalScores } from '@/components/quiz/team-total-scores';
 import {
@@ -70,23 +70,25 @@ export default function SettingsPage() {
     });
   };
   
-  const handlePointValueChange = (index: number, newValue: string) => {
+  const handlePointValueChange = (indexToChange: number, newValue: string) => {
     const parsedValue = parseInt(newValue, 10);
-    // Don't allow NaN, but do allow 0
+    // Only update if it's a valid number
     if (!isNaN(parsedValue)) {
-        setQuizState(prev => {
-            const newPointValues = [...prev.pointValues];
-            // Find the item to update, making sure it's not the 'WICKET' string
-            const numberValues = newPointValues.filter(v => typeof v === 'number');
-            const valueToUpdate = numberValues[index];
-            const originalIndex = newPointValues.findIndex(v => v === valueToUpdate);
-            
-            if(originalIndex !== -1) {
-              newPointValues[originalIndex] = parsedValue;
+      setQuizState(prev => {
+        const newPointValues = [...prev.pointValues];
+        let numericIndex = -1;
+        // Find the Nth numeric value in the array
+        for(let i = 0; i < newPointValues.length; i++) {
+            if(typeof newPointValues[i] === 'number') {
+                numericIndex++;
+                if(numericIndex === indexToChange) {
+                    newPointValues[i] = parsedValue;
+                    break;
+                }
             }
-
-            return { ...prev, pointValues: newPointValues };
-        });
+        }
+        return { ...prev, pointValues: newPointValues };
+      });
     }
   };
 
@@ -107,12 +109,15 @@ export default function SettingsPage() {
   const removePointValue = (indexToRemove: number) => {
     setQuizState(prev => {
         const newPointValues = [...prev.pointValues];
-        const numberValues = newPointValues.filter(v => typeof v === 'number');
-        const valueToRemove = numberValues[indexToRemove];
-        const originalIndex = newPointValues.findIndex(v => v === valueToRemove);
-
-        if (originalIndex !== -1) {
-            newPointValues.splice(originalIndex, 1);
+        let numericIndex = -1;
+         for(let i = 0; i < newPointValues.length; i++) {
+            if(typeof newPointValues[i] === 'number') {
+                numericIndex++;
+                if(numericIndex === indexToRemove) {
+                    newPointValues.splice(i, 1);
+                    break;
+                }
+            }
         }
         return { ...prev, pointValues: newPointValues };
     });
@@ -206,7 +211,7 @@ export default function SettingsPage() {
                     <Button variant="ghost" size="sm" onClick={addPointValue}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                    {numericPointValues.map((value, index) => (
+                    {isClient && numericPointValues.map((value, index) => (
                         <div key={index} className="relative group">
                             <Input 
                                 type="number" 
@@ -362,4 +367,5 @@ export default function SettingsPage() {
       </Card>
     </div>
   );
-}
+
+    
