@@ -50,10 +50,23 @@ export default function SettingsPage() {
       primary: '231 48% 48%',
     }
   );
+  
+  // Local state to manage the temporary string values of the inputs
+  const [pointInputValues, setPointInputValues] = useState<(string | number)[]>([]);
 
   useEffect(() => {
     setIsClient(true);
+    // Sync local input state with global quiz state on mount
+    setPointInputValues(quizState.pointValues.filter(v => typeof v === 'number'));
   }, []);
+  
+  useEffect(() => {
+    // Keep local state in sync when global state changes from another source
+    if (isClient) {
+        setPointInputValues(quizState.pointValues.filter(v => typeof v === 'number'));
+    }
+  }, [quizState.pointValues, isClient])
+
 
   const handleQuizTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuizState(prev => ({
@@ -71,75 +84,47 @@ export default function SettingsPage() {
   };
   
   const handlePointValueChange = (indexToChange: number, newValue: string) => {
-    setQuizState(prev => {
-      const newPointValues = [...prev.pointValues];
-      const numericPointValues = newPointValues.filter(v => typeof v === 'number');
-      const wicketValue = newPointValues.find(v => v === 'WICKET');
+    const newInputValues = [...pointInputValues];
+    newInputValues[indexToChange] = newValue;
+    setPointInputValues(newInputValues);
+  };
+  
+  const handlePointValueBlur = (indexToChange: number) => {
+     const value = pointInputValues[indexToChange];
+     const parsedValue = parseInt(String(value), 10);
 
-      if (newValue === '') {
-        // Allow clearing the input, but don't save an empty value
-        // We can maybe represent it as a temporary state if needed,
-        // but for now, we'll just let the input be empty.
-        // Let's ensure we find the right global index.
-         let numericIndex = -1;
-         for(let i = 0; i < newPointValues.length; i++) {
-            if(typeof newPointValues[i] === 'number') {
-                numericIndex++;
-                if(numericIndex === indexToChange) {
-                    newPointValues[i] = ''; // Temporarily empty
-                    break;
-                }
-            }
-        }
-      } else {
-        const parsedValue = parseInt(newValue, 10);
+     setQuizState(prev => {
+        const numericPointValues = prev.pointValues.filter(v => typeof v === 'number') as number[];
         if (!isNaN(parsedValue)) {
-            let numericIndex = -1;
-            for(let i = 0; i < newPointValues.length; i++) {
-                if(typeof newPointValues[i] === 'number' || newPointValues[i] === '') {
-                    numericIndex++;
-                    if(numericIndex === indexToChange) {
-                        newPointValues[i] = parsedValue;
-                        break;
-                    }
-                }
-            }
+            numericPointValues[indexToChange] = parsedValue;
+        } else {
+            // If invalid, remove it from the list on blur
+            numericPointValues.splice(indexToChange, 1);
         }
-      }
-       
-      // Filter out empty strings before final state update
-      const cleanedPointValues = newPointValues.filter(v => v !== '');
-      return { ...prev, pointValues: cleanedPointValues };
-    });
+        
+        const wicketValue = prev.pointValues.find(v => v === 'WICKET');
+        const newPointValues = [...numericPointValues];
+        if(wicketValue) newPointValues.push(wicketValue);
+
+        return { ...prev, pointValues: newPointValues };
+     });
   };
 
+
   const addPointValue = () => {
-    setQuizState(prev => {
-        const newPointValues = [...prev.pointValues];
-        // Insert a new value (e.g., 5) before 'WICKET'
-        const wicketIndex = newPointValues.findIndex(v => v === 'WICKET');
-        if (wicketIndex !== -1) {
-            newPointValues.splice(wicketIndex, 0, 5);
-        } else {
-            newPointValues.push(5);
-        }
-        return { ...prev, pointValues: newPointValues };
-    });
+    const newPointInputValues = [...pointInputValues, ''];
+    setPointInputValues(newPointInputValues);
   };
 
   const removePointValue = (indexToRemove: number) => {
     setQuizState(prev => {
-        const newPointValues = [...prev.pointValues];
-        let numericIndex = -1;
-         for(let i = 0; i < newPointValues.length; i++) {
-            if(typeof newPointValues[i] === 'number') {
-                numericIndex++;
-                if(numericIndex === indexToRemove) {
-                    newPointValues.splice(i, 1);
-                    break;
-                }
-            }
-        }
+        const numericPointValues = prev.pointValues.filter(v => typeof v === 'number') as number[];
+        numericPointValues.splice(indexToRemove, 1);
+        
+        const wicketValue = prev.pointValues.find(v => v === 'WICKET');
+        const newPointValues = [...numericPointValues];
+        if (wicketValue) newPointValues.push(wicketValue);
+        
         return { ...prev, pointValues: newPointValues };
     });
   };
@@ -192,7 +177,6 @@ export default function SettingsPage() {
     }
   }
 
-  const numericPointValues = isClient ? quizState.pointValues.filter(v => typeof v === 'number') as number[] : [];
 
   return (
     <div className="flex min-h-screen flex-col items-center p-4 bg-muted/20">
@@ -232,12 +216,13 @@ export default function SettingsPage() {
                     <Button variant="ghost" size="sm" onClick={addPointValue}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                    {isClient && numericPointValues.map((value, index) => (
+                    {isClient && pointInputValues.map((value, index) => (
                         <div key={`point-value-${index}`} className="relative group">
                             <Input 
                                 type="text"
                                 value={value} 
                                 onChange={(e) => handlePointValueChange(index, e.target.value)} 
+                                onBlur={() => handlePointValueBlur(index)}
                                 className="text-center pr-6" 
                             />
                             <Button 
@@ -389,3 +374,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
