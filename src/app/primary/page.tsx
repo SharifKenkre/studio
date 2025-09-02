@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
-import { ArrowLeft, Copy, RefreshCw, Settings } from 'lucide-react';
+import { ArrowLeft, Copy, RefreshCw, Settings, ArrowRight } from 'lucide-react';
 import { ScoringGrid } from '@/components/quiz/scoring-grid';
 import { PointButtons } from '@/components/quiz/point-buttons';
 import { Progress } from '@/components/ui/progress';
@@ -116,6 +116,34 @@ export default function PrimaryPage() {
     });
   };
 
+  const handleNextQuestion = () => {
+     if (!quizState.activeCell) return;
+     const currentQuestion = quizState.activeCell.question;
+
+     setQuizState(prev => {
+        const newScores = { ...prev.scores };
+        if (!newScores[currentQuestion]) {
+            newScores[currentQuestion] = {};
+        }
+
+        for (let i = 0; i < prev.numTeams; i++) {
+            if (newScores[currentQuestion][i] === undefined) {
+                newScores[currentQuestion][i] = 0;
+            }
+        }
+        
+        const nextQuestion = currentQuestion + 1;
+        const newNumQuestions = Math.max(prev.numQuestions, nextQuestion);
+
+        return {
+            ...prev,
+            scores: newScores,
+            activeCell: { question: nextQuestion, team: 0 },
+            numQuestions: newNumQuestions,
+        };
+     });
+  };
+
   const handleEndRound = () => {
     if (!roundName.trim()) {
       toast({ variant: 'destructive', title: 'Invalid Round Name', description: 'Please enter a name for the round.' });
@@ -211,8 +239,8 @@ export default function PrimaryPage() {
       
       <footer className="flex-shrink-0">
         <PointButtons onScore={handleScore} />
-        <div className="mt-4 flex justify-end items-center">
-            <AlertDialog open={isEndRoundAlertOpen} onOpenChange={setIsEndRoundAlertOpen}>
+        <div className="mt-4 flex justify-between items-center">
+             <AlertDialog open={isEndRoundAlertOpen} onOpenChange={setIsEndRoundAlertOpen}>
               <AlertDialogTrigger asChild>
                 <Button variant="secondary">End Round</Button>
               </AlertDialogTrigger>
@@ -238,6 +266,9 @@ export default function PrimaryPage() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+            <Button onClick={handleNextQuestion}>
+                Next Question <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
         </div>
       </footer>
     </div>

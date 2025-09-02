@@ -14,6 +14,7 @@ export type QuizState = {
   activeCell: { question: number; team: number } | null;
   numQuestions: number; // No longer fixed, just a counter
   rounds: { name: string; scores: Record<number, Record<number, number>> }[];
+  pointValues: number[];
   monitorSettings: {
     theme: string;
     compact: boolean;
@@ -30,6 +31,7 @@ export const initialState: QuizState = {
   activeCell: { question: 0, team: 0 },
   numQuestions: 0,
   rounds: [],
+  pointValues: [-10, -5, 0, 5, 10, 15, 20],
   monitorSettings: {
     theme: 'default',
     compact: false,

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Copy, Monitor, Palette, AlertTriangle, Users, Pencil } from 'lucide-react';
+import { ArrowLeft, Copy, Monitor, Palette, AlertTriangle, Users, Pencil, Star } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { TeamTotalScores } from '@/components/quiz/team-total-scores';
 import {
@@ -67,6 +67,17 @@ export default function SettingsPage() {
         newTeamNames[index] = newName;
         return { ...prev, teamNames: newTeamNames };
     });
+  };
+  
+  const handlePointValueChange = (index: number, newValue: string) => {
+    const parsedValue = parseInt(newValue, 10);
+    if (!isNaN(parsedValue)) {
+        setQuizState(prev => {
+            const newPointValues = [...prev.pointValues];
+            newPointValues[index] = parsedValue;
+            return { ...prev, pointValues: newPointValues };
+        });
+    }
   };
 
   const handleThemeChange = (theme: string) => {
@@ -131,10 +142,18 @@ export default function SettingsPage() {
                 <Input id="quiz-title" value={quizState.quizTitle} onChange={handleQuizTitleChange} />
               </div>
                <div className="space-y-2">
-                <Label>Team Names</Label>
+                <Label className="flex items-center gap-2"><Users /> Team Names</Label>
                 <div className="grid grid-cols-2 gap-2">
                     {isClient && quizState.teamNames.map((name, index) => (
                         <Input key={index} value={name} onChange={(e) => handleTeamNameChange(index, e.target.value)} />
+                    ))}
+                </div>
+              </div>
+               <div className="space-y-2">
+                <Label className="flex items-center gap-2"><Star /> Score Button Values</Label>
+                <div className="grid grid-cols-4 gap-2">
+                    {isClient && quizState.pointValues.map((value, index) => (
+                        <Input key={index} type="number" value={value} onChange={(e) => handlePointValueChange(index, e.target.value)} className="text-center" />
                     ))}
                 </div>
               </div>

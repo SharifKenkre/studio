@@ -13,14 +13,17 @@ import { cn } from '@/lib/utils';
 import { useEffect, useRef } from 'react';
 
 export function ScoringGrid() {
-  const { quizState } = useQuiz();
-  const { numTeams, numQuestions, scores, activeCell, teamNames } = quizState;
+  const { quizState, setQuizState } = useQuiz();
+  const { scores, activeCell, teamNames } = quizState;
   const activeCellRef = useRef<HTMLTableCellElement>(null);
+  
+  const numTeams = teamNames?.length || 0;
+  // Show at least 5 questions initially, or more if we have data for them.
+  const numQuestions = quizState.numQuestions > 0 ? quizState.numQuestions + 2 : 5;
+
 
   const teamHeaders = Array.from({ length: numTeams }, (_, i) => i);
-  // We need at least one row to show, even if no questions have been answered yet.
-  const questionRows = Array.from({ length: Math.max(1, numQuestions + 1) }, (_, i) => i);
-
+  const questionRows = Array.from({ length: Math.max(1, numQuestions) }, (_, i) => i);
 
   useEffect(() => {
     activeCellRef.current?.scrollIntoView({
@@ -29,6 +32,13 @@ export function ScoringGrid() {
       inline: 'center',
     });
   }, [activeCell]);
+
+  const handleCellClick = (question: number, team: number) => {
+    setQuizState(prev => ({
+      ...prev,
+      activeCell: { question, team }
+    }));
+  };
 
   return (
     <div className="border rounded-lg overflow-hidden bg-card">
@@ -57,10 +67,11 @@ export function ScoringGrid() {
                     key={teamIndex}
                     ref={isActive ? activeCellRef : null}
                     className={cn(
-                      'text-center font-mono text-lg transition-all duration-200',
+                      'text-center font-mono text-lg transition-all duration-200 cursor-pointer hover:bg-muted/50',
                       isActive && 'bg-accent/20 ring-2 ring-accent rounded-md',
                       score !== undefined ? 'font-bold' : 'text-muted-foreground'
                     )}
+                    onClick={() => handleCellClick(questionIndex, teamIndex)}
                   >
                     {score !== undefined ? score : '-'}
                   </TableCell>
