@@ -103,21 +103,26 @@ export default function MonitorPage() {
   }
 
   return (
-    <main className={cn("flex-grow p-4 md:p-8 flex flex-col items-center justify-center gap-8 w-full")}>
-      <header className="w-full max-w-7xl mx-auto text-center">
-        <h1 className="text-5xl font-bold font-headline text-primary">{quizState.quizTitle}</h1>
-        <p className="text-muted-foreground">Scores update in real-time as they are entered.</p>
-      </header>
-      
-      <div className="w-full max-w-7xl mx-auto">
-        <TeamTotalScores />
-      </div>
-      
-      {(quizState.rounds || []).length > 0 && (
-         <div className="w-full max-w-7xl mx-auto">
-            <RoundScores />
-        </div>
-      )}
-    </main>
+    <div className="flex flex-col flex-1">
+        <main className={cn("flex-grow p-4 md:p-8 flex flex-col items-center justify-center gap-8 w-full")}>
+            <header className="w-full max-w-7xl mx-auto text-center">
+                <h1 className="text-5xl font-bold font-headline text-primary">{quizState.quizTitle}</h1>
+                <p className="text-muted-foreground">Scores update in real-time as they are entered.</p>
+            </header>
+            
+            <div className="w-full max-w-7xl mx-auto">
+                <TeamTotalScores />
+            </div>
+            
+            {(quizState.rounds || []).length > 0 && (
+                <div className="w-full max-w-7xl mx-auto">
+                    <RoundScores />
+                </div>
+            )}
+        </main>
+        <footer className="p-4 text-right">
+            <p className="text-sm text-muted-foreground">Made by Sharif</p>
+        </footer>
+    </div>
   );
 }
