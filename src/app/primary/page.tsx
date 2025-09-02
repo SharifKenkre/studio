@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useQuiz } from '@/contexts/quiz-context';
@@ -13,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
-import { ArrowLeft, Copy, RefreshCw, Settings, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Copy, RefreshCw, Settings, ArrowRight, WifiOff, Wifi } from 'lucide-react';
 import { ScoringGrid } from '@/components/quiz/scoring-grid';
 import { PointButtons } from '@/components/quiz/point-buttons';
 import { Progress } from '@/components/ui/progress';
@@ -29,7 +30,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { PingIndicator } from '@/components/quiz/ping-indicator';
 
+
+const HEARTBEAT_TIMEOUT = 5000; // 5 seconds
 
 export default function PrimaryPage() {
   const { quizState, setQuizState, initialState } = useQuiz();
@@ -38,6 +42,8 @@ export default function PrimaryPage() {
   const [roundName, setRoundName] = useState('');
   const [isEndRoundAlertOpen, setIsEndRoundAlertOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [isMonitorConnected, setIsMonitorConnected] = useState(false);
+
 
   useEffect(() => {
     setIsClient(true);
@@ -48,6 +54,18 @@ export default function PrimaryPage() {
       router.push('/');
     }
   }, [quizState.verificationCode, router, isClient]);
+
+   useEffect(() => {
+    const connectionCheckInterval = setInterval(() => {
+      if (quizState.monitorHeartbeat && (Date.now() - quizState.monitorHeartbeat) < HEARTBEAT_TIMEOUT) {
+        setIsMonitorConnected(true);
+      } else {
+        setIsMonitorConnected(false);
+      }
+    }, 3000); // Check every 3 seconds
+
+    return () => clearInterval(connectionCheckInterval);
+  }, [quizState.monitorHeartbeat]);
 
   const handleNewCode = () => {
     const newCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -146,7 +164,7 @@ export default function PrimaryPage() {
 
   const handleEndRound = () => {
     if (!roundName.trim()) {
-      toast({ variant: 'destructive', title: 'Invalid Round Name', description: 'Please enter a name for the round.' });
+      toast({ variant: 'destructive', title: 'Invalid Round Name', description: 'Please enter a name for this round.' });
       return;
     }
     setQuizState(prev => {
@@ -219,6 +237,7 @@ export default function PrimaryPage() {
       <header className="flex-shrink-0 flex items-center justify-between">
         <h1 className="text-2xl font-bold font-headline">Scoring</h1>
         <div className="flex items-center gap-4">
+            <PingIndicator isConnected={isMonitorConnected} />
             <div className="text-right">
                 <p className="text-sm text-muted-foreground">Question Progress</p>
                 <div className="flex items-center gap-2 w-48">
@@ -233,16 +252,23 @@ export default function PrimaryPage() {
         </div>
       </header>
 
-      <main className="flex-grow overflow-auto">
+      <main className="flex-grow overflow-auto relative">
+        {!isMonitorConnected && (
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center">
+                <WifiOff className="h-16 w-16 text-destructive" />
+                <h2 className="mt-4 text-2xl font-bold font-headline">Monitor Disconnected</h2>
+                <p className="text-muted-foreground">Scoring is paused. Please ensure the monitor device is connected.</p>
+            </div>
+        )}
         <ScoringGrid />
       </main>
       
       <footer className="flex-shrink-0">
-        <PointButtons onScore={handleScore} />
+        <PointButtons onScore={handleScore} disabled={!isMonitorConnected} />
         <div className="mt-4 flex justify-between items-center">
              <AlertDialog open={isEndRoundAlertOpen} onOpenChange={setIsEndRoundAlertOpen}>
               <AlertDialogTrigger asChild>
-                <Button variant="secondary">End Round</Button>
+                <Button variant="secondary" disabled={!isMonitorConnected}>End Round</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -266,7 +292,7 @@ export default function PrimaryPage() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button onClick={handleNextQuestion}>
+            <Button onClick={handleNextQuestion} disabled={!isMonitorConnected}>
                 Next Question <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
         </div>

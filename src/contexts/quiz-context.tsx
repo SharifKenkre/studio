@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useSyncedState } from '@/hooks/use-synced-state';
@@ -20,6 +21,7 @@ export type QuizState = {
     compact: boolean;
     customTheme?: CustomTheme;
   };
+  monitorHeartbeat: number | null;
 };
 
 export const initialState: QuizState = {
@@ -41,6 +43,7 @@ export const initialState: QuizState = {
       primary: '231 48% 48%',
     },
   },
+  monitorHeartbeat: null,
 };
 
 type QuizContextType = {

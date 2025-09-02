@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -6,9 +7,10 @@ import { useQuiz } from '@/contexts/quiz-context';
 
 interface PointButtonsProps {
   onScore: (points: number) => void;
+  disabled?: boolean;
 }
 
-export function PointButtons({ onScore }: PointButtonsProps) {
+export function PointButtons({ onScore, disabled = false }: PointButtonsProps) {
     const { quizState } = useQuiz();
     const { pointValues } = quizState;
     const activeTeamIndex = quizState.activeCell ? quizState.activeCell.team : null;
@@ -40,6 +42,7 @@ export function PointButtons({ onScore }: PointButtonsProps) {
               onClick={() => onScore(point)}
               className="h-16 text-xl font-bold transform hover:scale-110 transition-transform"
               variant={point > 0 ? 'default' : point < 0 ? 'destructive' : 'secondary'}
+              disabled={disabled}
             >
               {point > 0 ? `+${point}` : point}
             </Button>

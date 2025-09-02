@@ -16,11 +16,22 @@ import { RoundScores } from '@/components/quiz/round-scores';
 import { cn } from '@/lib/utils';
 
 export default function MonitorPage() {
-  const { quizState } = useQuiz();
+  const { quizState, setQuizState } = useQuiz();
   const [verified, setVerified] = useState(false);
   const [inputCode, setInputCode] = useState('');
   const { toast } = useToast();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!verified) return;
+
+    // Start sending heartbeat when connected
+    const heartbeatInterval = setInterval(() => {
+        setQuizState(prev => ({...prev, monitorHeartbeat: Date.now()}))
+    }, 2000); // Send heartbeat every 2 seconds
+
+    return () => clearInterval(heartbeatInterval);
+  }, [verified, setQuizState]);
 
   const handleVerify = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -92,12 +103,11 @@ export default function MonitorPage() {
   }
 
   return (
-    <main className={cn("flex-grow p-4 md:p-8", quizState.monitorSettings.compact ? "space-y-4" : "space-y-8")}>
+    <main className={cn("flex-grow p-4 md:p-8 flex flex-col gap-8", quizState.monitorSettings.compact ? "space-y-4" : "space-y-8")}>
       <header className="text-center relative">
         <h1 className="text-5xl font-bold font-headline text-primary">{quizState.quizTitle}</h1>
         <p className="text-muted-foreground">Scores update in real-time as they are entered.</p>
       </header>
-
       <div className="w-full max-w-7xl mx-auto">
         <TeamTotalScores />
       </div>
@@ -107,8 +117,6 @@ export default function MonitorPage() {
             <RoundScores />
         </div>
       )}
-
     </main>
   );
 }
-
