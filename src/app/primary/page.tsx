@@ -17,7 +17,6 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowLeft, Copy, RefreshCw, Settings, ArrowRight, WifiOff, Wifi } from 'lucide-react';
 import { ScoringGrid } from '@/components/quiz/scoring-grid';
 import { PointButtons } from '@/components/quiz/point-buttons';
-import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -34,7 +33,6 @@ import { PingIndicator } from '@/components/quiz/ping-indicator';
 
 
 const HEARTBEAT_TIMEOUT = 5000; // 5 seconds
-const BALLS_PER_OVER = 6;
 
 export default function PrimaryPage() {
   const { quizState, setQuizState, initialState } = useQuiz();
@@ -114,14 +112,6 @@ export default function PrimaryPage() {
 
   const handleScore = (points: number | 'WICKET') => {
     if (!quizState.activeCell) return;
-    if(quizState.numQuestions >= BALLS_PER_OVER) {
-        toast({
-            variant: 'destructive',
-            title: 'Over Complete',
-            description: 'This over has finished. Please end the over to start a new one.',
-        });
-        return;
-    }
 
     const { question, team } = quizState.activeCell;
 
@@ -158,14 +148,6 @@ export default function PrimaryPage() {
 
   const handleNextQuestion = () => {
      if (!quizState.activeCell) return;
-     if(quizState.numQuestions >= BALLS_PER_OVER) {
-        toast({
-            variant: 'destructive',
-            title: 'Over Complete',
-            description: 'This over has finished. Please end the over to start a new one.',
-        });
-        return;
-    }
      const currentQuestion = quizState.activeCell.question;
 
      setQuizState(prev => {
@@ -259,11 +241,6 @@ export default function PrimaryPage() {
     );
   }
   
-  const numScoredInQuestion = quizState.activeCell ? Object.keys(quizState.scores[quizState.activeCell.question] || {}).length : quizState.numTeams;
-  const progress = quizState.activeCell && quizState.numTeams > 0 ? (numScoredInQuestion / quizState.numTeams) * 100 : 0;
-  
-  const currentOverProgress = `${quizState.numQuestions}/${BALLS_PER_OVER}`;
-
   return (
     <div className="flex flex-col h-screen p-4 gap-4">
       <header className="flex-shrink-0 flex items-center justify-between">
@@ -272,10 +249,7 @@ export default function PrimaryPage() {
             <PingIndicator isConnected={isMonitorConnected} />
              <div className="text-right">
                 <p className="text-sm text-muted-foreground">Current Over</p>
-                <div className="flex items-center gap-2 w-32">
-                    <Progress value={(quizState.numQuestions / BALLS_PER_OVER) * 100} className="w-full h-2"/>
-                    <span className="text-sm font-mono">{currentOverProgress}</span>
-                </div>
+                <p className="font-bold">{quizState.numQuestions} Balls</p>
             </div>
             <Button variant="outline" size="icon" onClick={() => router.push('/primary/settings')}>
                 <Settings />
