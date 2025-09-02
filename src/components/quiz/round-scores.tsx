@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useQuiz } from '@/contexts/quiz-context';
@@ -22,9 +23,18 @@ export function RoundScores() {
   
   const roundTotals = rounds.map(round => {
     return Array.from({ length: numTeams }, (_, teamIndex) => {
-        return Object.values(round.scores).reduce((total, questionScores) => {
-            return total + (questionScores[teamIndex] || 0);
-        }, 0);
+      let totalRuns = 0;
+      let totalWickets = 0;
+      Object.values(round.scores).forEach((questionScores) => {
+        const score = questionScores[teamIndex];
+        if (score) {
+          totalRuns += score.runs || 0;
+          if (score.isWicket) {
+            totalWickets += 1;
+          }
+        }
+      });
+      return { runs: totalRuns, wickets: totalWickets };
     });
   });
 
@@ -32,7 +42,7 @@ export function RoundScores() {
     <Card className={cn("shadow-lg", quizState.monitorSettings.compact && "p-2")}>
         <CardHeader>
             <CardTitle className={cn("text-3xl font-bold font-headline text-center", quizState.monitorSettings.compact && "text-xl")}>
-                Round Summary
+                Over Summary
             </CardTitle>
         </CardHeader>
         <CardContent>
@@ -40,7 +50,7 @@ export function RoundScores() {
                 <Table>
                     <TableHeader>
                     <TableRow>
-                        <TableHead className="font-headline">Round</TableHead>
+                        <TableHead className="font-headline">Over</TableHead>
                         {teamNames.map((name, teamIndex) => (
                         <TableHead key={teamIndex} className="text-center font-headline">
                             {name}
@@ -54,7 +64,7 @@ export function RoundScores() {
                         <TableCell className="font-medium font-headline">{round.name}</TableCell>
                         {roundTotals[roundIndex].map((total, teamIndex) => (
                             <TableCell key={teamIndex} className="text-center font-mono text-lg">
-                                {total}
+                                {total.runs}/{total.wickets}
                             </TableCell>
                         ))}
                         </TableRow>

@@ -1,3 +1,4 @@
+
 import type { QuizState } from '@/contexts/quiz-context';
 import Papa from 'papaparse';
 
@@ -5,39 +6,51 @@ export const exportToCsv = (quizState: QuizState) => {
   const { rounds, teamNames } = quizState;
 
   const data: (string | number)[][] = [];
-  const headers = ['Round', 'Question', ...teamNames];
+  const headers = ['Over', 'Ball', ...teamNames.flatMap(name => [`${name} Runs`, `${name} Wickets`])];
   data.push(headers);
 
-  const grandTotals = Array(teamNames.length).fill(0);
+  const grandTotalRuns = Array(teamNames.length).fill(0);
+  const grandTotalWickets = Array(teamNames.length).fill(0);
 
   rounds.forEach(round => {
-    const roundTotals = Array(teamNames.length).fill(0);
+    const overTotalRuns = Array(teamNames.length).fill(0);
+    const overTotalWickets = Array(teamNames.length).fill(0);
+
     const questionNumbers = Object.keys(round.scores)
       .map(Number)
       .sort((a, b) => a - b);
     
     questionNumbers.forEach(qIndex => {
-      const row = [round.name, `Q${qIndex + 1}`];
+      const row: (string|number)[] = [round.name, `B${qIndex + 1}`];
       teamNames.forEach((_, teamIndex) => {
-        const score = round.scores[qIndex]?.[teamIndex] || 0;
-        row.push(score);
-        roundTotals[teamIndex] += score;
+        const score = round.scores[qIndex]?.[teamIndex];
+        const runs = score?.runs || 0;
+        const wicket = score?.isWicket ? 1 : 0;
+        row.push(runs);
+        row.push(wicket);
+        overTotalRuns[teamIndex] += runs;
+        overTotalWickets[teamIndex] += wicket;
       });
       data.push(row);
     });
 
-    // Add round totals
-    const roundTotalRow = [round.name, 'Round Tot', ...roundTotals];
-    data.push(roundTotalRow);
-    data.push([]); // Add a blank row for spacing
-
-    roundTotals.forEach((total, i) => {
-      grandTotals[i] += total;
+    const overTotalRow: (string|number)[] = [round.name, 'Over Total'];
+    overTotalRuns.forEach((runs, i) => {
+        overTotalRow.push(runs);
+        overTotalRow.push(overTotalWickets[i]);
+        grandTotalRuns[i] += runs;
+        grandTotalWickets[i] += overTotalWickets[i];
     });
+    data.push(overTotalRow);
+    data.push([]); 
   });
 
-  // Add overall grand totals
-  data.push(['Overall', 'Grand Tot', ...grandTotals]);
+  const grandTotalRow: (string|number)[] = ['Overall', 'Grand Total'];
+  grandTotalRuns.forEach((runs, i) => {
+      grandTotalRow.push(runs);
+      grandTotalRow.push(grandTotalWickets[i]);
+  });
+  data.push(grandTotalRow);
 
   const csv = Papa.unparse(data);
   
@@ -46,7 +59,7 @@ export const exportToCsv = (quizState: QuizState) => {
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', 'quiz_scores.csv');
+    link.setAttribute('download', 'cricket_scores.csv');
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();

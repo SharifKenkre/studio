@@ -6,16 +6,21 @@ import type { CustomTheme } from '@/lib/theme';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { createContext, useContext } from 'react';
 
+export type Score = {
+  runs: number;
+  isWicket: boolean;
+};
+
 export type QuizState = {
   verificationCode: string | null;
   quizTitle: string;
   numTeams: number;
   teamNames: string[];
-  scores: Record<number, Record<number, number>>; // { [questionIndex]: { [teamIndex]: score } }
+  scores: Record<number, Record<number, Score>>; // { [questionIndex]: { [teamIndex]: { runs, isWicket } } }
   activeCell: { question: number; team: number } | null;
-  numQuestions: number; // No longer fixed, just a counter
-  rounds: { name: string; scores: Record<number, Record<number, number>> }[];
-  pointValues: number[];
+  numQuestions: number; // Represents balls in the current over
+  rounds: { name: string; scores: Record<number, Record<number, Score>> }[];
+  pointValues: (number | 'WICKET')[];
   monitorSettings: {
     theme: string;
     compact: boolean;
@@ -26,14 +31,14 @@ export type QuizState = {
 
 export const initialState: QuizState = {
   verificationCode: null,
-  quizTitle: 'Live Scoreboard',
+  quizTitle: 'Live Cricket Scoreboard',
   numTeams: 0,
   teamNames: [],
   scores: {},
   activeCell: { question: 0, team: 0 },
   numQuestions: 0,
   rounds: [],
-  pointValues: [-10, -5, 0, 5, 10, 15, 20],
+  pointValues: [0, 1, 2, 3, 4, 6, 'WICKET'],
   monitorSettings: {
     theme: 'default',
     compact: false,

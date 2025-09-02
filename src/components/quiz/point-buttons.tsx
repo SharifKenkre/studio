@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useQuiz } from '@/contexts/quiz-context';
 
 interface PointButtonsProps {
-  onScore: (points: number) => void;
+  onScore: (points: number | 'WICKET') => void;
   disabled?: boolean;
 }
 
@@ -20,8 +20,8 @@ export function PointButtons({ onScore, disabled = false }: PointButtonsProps) {
   if (!quizState.activeCell) {
     return (
         <Card className="text-center p-8">
-            <CardTitle className="font-headline">Ready for next question</CardTitle>
-            <CardDescription>Click the "Next Question" button to continue.</CardDescription>
+            <CardTitle className="font-headline">Ready for next ball</CardTitle>
+            <CardDescription>Click the "Next Ball" button to continue.</CardDescription>
         </Card>
     )
   }
@@ -30,9 +30,9 @@ export function PointButtons({ onScore, disabled = false }: PointButtonsProps) {
     <Card className="shadow-lg">
       <CardHeader className="text-center">
         <CardTitle className="font-headline">
-          Scoring Question {activeQuestion} for {activeTeamName}
+          Scoring Ball {activeQuestion} for {activeTeamName}
         </CardTitle>
-        <CardDescription>Select a point value to assign, or click a cell to edit.</CardDescription>
+        <CardDescription>Select runs or a wicket to assign, or click a cell to edit.</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
@@ -41,10 +41,10 @@ export function PointButtons({ onScore, disabled = false }: PointButtonsProps) {
               key={index}
               onClick={() => onScore(point)}
               className="h-16 text-xl font-bold transform hover:scale-110 transition-transform"
-              variant={point > 0 ? 'default' : point < 0 ? 'destructive' : 'secondary'}
+              variant={point === 'WICKET' ? 'destructive' : point === 0 ? 'secondary' : 'default'}
               disabled={disabled}
             >
-              {point > 0 ? `+${point}` : point}
+              {point}
             </Button>
           ))}
         </div>

@@ -8,18 +8,15 @@ import { useEffect, useState } from 'react';
 
 type PreviewScore = {
   name: string;
-  score: number;
+  runs: number;
+  wickets: number;
   height: number;
 };
 
-const TeamScoreCard = ({ name, score, heightPercent, isCompact }: { name: string; score: number; heightPercent: number; isCompact: boolean; }) => (
+const TeamScoreCard = ({ name, runs, wickets, isCompact }: { name: string; runs: number; wickets: number, isCompact: boolean; }) => (
     <Card
       className="shadow-lg transition-all duration-300 hover:shadow-2xl relative overflow-hidden"
     >
-      <div
-        className="absolute bottom-0 left-0 right-0 bg-primary/20 transition-all duration-500 ease-out"
-        style={{ top: `${100 - heightPercent}%` }}
-      />
       <CardHeader className="relative">
         <CardTitle className="text-2xl font-headline text-center">{name}</CardTitle>
       </CardHeader>
@@ -28,7 +25,7 @@ const TeamScoreCard = ({ name, score, heightPercent, isCompact }: { name: string
           "text-7xl font-bold font-mono text-primary",
           isCompact && "text-5xl"
         )}>
-          {score}
+          {runs}/{wickets}
         </p>
       </CardContent>
     </Card>
@@ -47,15 +44,13 @@ export function TeamTotalScores() {
   const [isMounted, setIsMounted] = useState(false);
   const [previewScores, setPreviewScores] = useState<PreviewScore[]>([]);
 
-  // This effect runs only on the client, once, after the initial render.
   useEffect(() => {
     setIsMounted(true);
-    
-    // Generate preview data only on the client to avoid hydration mismatch
     setPreviewScores(
       Array.from({ length: 4 }).map((_, i) => ({
         name: `Team ${i + 1}`,
-        score: Math.floor(Math.random() * 100),
+        runs: Math.floor(Math.random() * 200),
+        wickets: Math.floor(Math.random() * 10),
         height: Math.random() * 60 + 20,
       }))
     );
@@ -66,8 +61,6 @@ export function TeamTotalScores() {
     monitorSettings.compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
   );
 
-
-  // Before the client has mounted, render a skeleton UI to match the server
   if (!isMounted) {
     return (
         <div className={gridClasses}>
@@ -76,7 +69,6 @@ export function TeamTotalScores() {
     );
   }
   
-  // If there are no teams, render the client-side generated preview state
   if (numTeams === 0) {
     return (
       <div className={gridClasses}>
@@ -84,8 +76,8 @@ export function TeamTotalScores() {
             <TeamScoreCard 
                 key={index} 
                 name={preview.name} 
-                score={preview.score} 
-                heightPercent={preview.height}
+                runs={preview.runs}
+                wickets={preview.wickets}
                 isCompact={monitorSettings.compact}
              />
         ))}
@@ -94,19 +86,26 @@ export function TeamTotalScores() {
   }
 
   const teamTotals = Array.from({ length: numTeams }, (_, teamIndex) => {
-    let total = 0;
-    (rounds || []).forEach(round => {
-        Object.values(round.scores).forEach(questionScores => {
-            total += questionScores[teamIndex] || 0;
+    let totalRuns = 0;
+    let totalWickets = 0;
+
+    const processScores = (scoreData: Record<number, Record<number, any>>) => {
+        Object.values(scoreData).forEach(questionScores => {
+            const score = questionScores[teamIndex];
+            if (score) {
+                totalRuns += score.runs || 0;
+                if (score.isWicket) {
+                    totalWickets += 1;
+                }
+            }
         });
-    });
-    Object.values(scores).forEach(questionScores => {
-      total += (questionScores[teamIndex] || 0);
-    });
-    return total;
+    };
+
+    (rounds || []).forEach(round => processScores(round.scores));
+    processScores(scores);
+    
+    return { runs: totalRuns, wickets: totalWickets };
   });
-  
-  const maxScore = Math.max(...teamTotals, 1); // Use 1 to avoid division by zero
 
   return (
     <div className={gridClasses}>
@@ -114,12 +113,11 @@ export function TeamTotalScores() {
          <TeamScoreCard 
             key={index} 
             name={teamNames[index] || `Team ${index + 1}`} 
-            score={total} 
-            heightPercent={(total / maxScore) * 100}
+            runs={total.runs}
+            wickets={total.wickets}
             isCompact={monitorSettings.compact}
          />
       ))}
     </div>
   );
 }
-

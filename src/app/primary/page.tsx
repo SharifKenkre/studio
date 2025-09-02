@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useQuiz } from '@/contexts/quiz-context';
+import { useQuiz, type Score } from '@/contexts/quiz-context';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -34,6 +34,7 @@ import { PingIndicator } from '@/components/quiz/ping-indicator';
 
 
 const HEARTBEAT_TIMEOUT = 5000; // 5 seconds
+const BALLS_PER_OVER = 6;
 
 export default function PrimaryPage() {
   const { quizState, setQuizState, initialState } = useQuiz();
@@ -56,20 +57,21 @@ export default function PrimaryPage() {
   }, [quizState.verificationCode, router, isClient]);
 
    useEffect(() => {
-    // Initial check
-    if (quizState.monitorHeartbeat && (Date.now() - quizState.monitorHeartbeat) < HEARTBEAT_TIMEOUT) {
-      setIsMonitorConnected(true);
-    } else {
-      setIsMonitorConnected(false);
+    if (!quizState.monitorHeartbeat) {
+        setIsMonitorConnected(false);
+        return;
     }
 
-    const connectionCheckInterval = setInterval(() => {
-      if (quizState.monitorHeartbeat && (Date.now() - quizState.monitorHeartbeat) < HEARTBEAT_TIMEOUT) {
+    const checkConnection = () => {
+       if (quizState.monitorHeartbeat && (Date.now() - quizState.monitorHeartbeat) < HEARTBEAT_TIMEOUT) {
         setIsMonitorConnected(true);
       } else {
         setIsMonitorConnected(false);
       }
-    }, 3000); // Check every 3 seconds
+    }
+
+    checkConnection();
+    const connectionCheckInterval = setInterval(checkConnection, 3000); 
 
     return () => clearInterval(connectionCheckInterval);
   }, [quizState.monitorHeartbeat]);
@@ -110,17 +112,30 @@ export default function PrimaryPage() {
     }
   };
 
-  const handleScore = (points: number) => {
+  const handleScore = (points: number | 'WICKET') => {
     if (!quizState.activeCell) return;
+    if(quizState.numQuestions >= BALLS_PER_OVER) {
+        toast({
+            variant: 'destructive',
+            title: 'Over Complete',
+            description: 'This over has finished. Please end the over to start a new one.',
+        });
+        return;
+    }
 
     const { question, team } = quizState.activeCell;
 
     setQuizState((prev) => {
       const newScores = { ...prev.scores };
+      const score: Score = {
+        runs: points === 'WICKET' ? 0 : points,
+        isWicket: points === 'WICKET',
+      };
+      
       if (!newScores[question]) {
         newScores[question] = {};
       }
-      newScores[question][team] = points;
+      newScores[question][team] = score;
 
       let nextTeam = team + 1;
       let nextQuestion = question;
@@ -143,6 +158,14 @@ export default function PrimaryPage() {
 
   const handleNextQuestion = () => {
      if (!quizState.activeCell) return;
+     if(quizState.numQuestions >= BALLS_PER_OVER) {
+        toast({
+            variant: 'destructive',
+            title: 'Over Complete',
+            description: 'This over has finished. Please end the over to start a new one.',
+        });
+        return;
+    }
      const currentQuestion = quizState.activeCell.question;
 
      setQuizState(prev => {
@@ -153,7 +176,7 @@ export default function PrimaryPage() {
 
         for (let i = 0; i < prev.numTeams; i++) {
             if (newScores[currentQuestion][i] === undefined) {
-                newScores[currentQuestion][i] = 0;
+                newScores[currentQuestion][i] = { runs: 0, isWicket: false };
             }
         }
         
@@ -171,7 +194,7 @@ export default function PrimaryPage() {
 
   const handleEndRound = () => {
     if (!roundName.trim()) {
-      toast({ variant: 'destructive', title: 'Invalid Round Name', description: 'Please enter a name for this round.' });
+      toast({ variant: 'destructive', title: 'Invalid Over Name', description: 'Please enter a name for this over.' });
       return;
     }
     setQuizState(prev => {
@@ -190,7 +213,7 @@ export default function PrimaryPage() {
     });
     setRoundName('');
     setIsEndRoundAlertOpen(false);
-    toast({ title: 'Round Ended', description: `Round "${roundName}" has been saved.` });
+    toast({ title: 'Over Ended', description: `Over "${roundName}" has been saved.` });
   };
   
   if (!isClient || !quizState.verificationCode) {
@@ -209,7 +232,7 @@ export default function PrimaryPage() {
             <Button variant="ghost" size="sm" className="absolute top-4 left-4" onClick={() => router.push('/')}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Back
             </Button>
-            <CardTitle className="text-center font-headline pt-8">Setup Your Quiz</CardTitle>
+            <CardTitle className="text-center font-headline pt-8">Setup Your Match</CardTitle>
             <CardDescription className="text-center">First, share the code with the Monitor. Then, set the number of teams.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-8">
@@ -226,9 +249,9 @@ export default function PrimaryPage() {
             <form className="space-y-4" onSubmit={handleSetTeams}>
                 <div className="space-y-2">
                     <Label htmlFor="teams">Number of Teams</Label>
-                    <Input id="teams" name="teams" type="number" min="1" max="20" placeholder="e.g., 4" required />
+                    <Input id="teams" name="teams" type="number" min="1" max="20" placeholder="e.g., 2" required />
                 </div>
-                <Button type="submit" className="w-full">Start Scoring</Button>
+                <Button type="submit" className="w-full">Start Match</Button>
             </form>
           </CardContent>
         </Card>
@@ -238,6 +261,8 @@ export default function PrimaryPage() {
   
   const numScoredInQuestion = quizState.activeCell ? Object.keys(quizState.scores[quizState.activeCell.question] || {}).length : quizState.numTeams;
   const progress = quizState.activeCell && quizState.numTeams > 0 ? (numScoredInQuestion / quizState.numTeams) * 100 : 0;
+  
+  const currentOverProgress = `${quizState.numQuestions}/${BALLS_PER_OVER}`;
 
   return (
     <div className="flex flex-col h-screen p-4 gap-4">
@@ -245,16 +270,16 @@ export default function PrimaryPage() {
         <h1 className="text-2xl font-bold font-headline">Scoring</h1>
         <div className="flex items-center gap-4">
             <PingIndicator isConnected={isMonitorConnected} />
-            <div className="text-right">
-                <p className="text-sm text-muted-foreground">Question Progress</p>
-                <div className="flex items-center gap-2 w-48">
-                    <Progress value={progress} className="w-full"/>
-                    <span className="text-sm font-mono">{Math.round(progress)}%</span>
+             <div className="text-right">
+                <p className="text-sm text-muted-foreground">Current Over</p>
+                <div className="flex items-center gap-2 w-32">
+                    <Progress value={(quizState.numQuestions / BALLS_PER_OVER) * 100} className="w-full h-2"/>
+                    <span className="text-sm font-mono">{currentOverProgress}</span>
                 </div>
             </div>
             <Button variant="outline" size="icon" onClick={() => router.push('/primary/settings')}>
                 <Settings />
-                <span className="sr-only">Monitor Settings</span>
+                <span className="sr-only">Settings</span>
             </Button>
         </div>
       </header>
@@ -275,32 +300,32 @@ export default function PrimaryPage() {
         <div className="mt-4 flex justify-between items-center">
              <AlertDialog open={isEndRoundAlertOpen} onOpenChange={setIsEndRoundAlertOpen}>
               <AlertDialogTrigger asChild>
-                <Button variant="secondary" disabled={!isMonitorConnected}>End Round</Button>
+                <Button variant="secondary" disabled={!isMonitorConnected}>End Over</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>End Current Round?</AlertDialogTitle>
+                  <AlertDialogTitle>End Current Over?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will save the current scores as a completed round. Please provide a name for this round.
+                    This will save the current scores as a completed over. Please provide a name for this over.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="py-4">
-                    <Label htmlFor="round-name">Round Name</Label>
+                    <Label htmlFor="round-name">Over Name</Label>
                     <Input
                         id="round-name"
                         value={roundName}
                         onChange={(e) => setRoundName(e.target.value)}
-                        placeholder={`e.g., Round ${(quizState.rounds || []).length + 1}`}
+                        placeholder={`e.g., Over ${(quizState.rounds || []).length + 1}`}
                     />
                 </div>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleEndRound}>End Round</AlertDialogAction>
+                  <AlertDialogAction onClick={handleEndRound}>End Over</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
             <Button onClick={handleNextQuestion} disabled={!isMonitorConnected}>
-                Next Question <ArrowRight className="ml-2 h-4 w-4" />
+                Next Ball <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
         </div>
       </footer>
