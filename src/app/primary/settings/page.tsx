@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Copy, Monitor, Palette, AlertTriangle, Users, Pencil, Star, Download } from 'lucide-react';
+import { ArrowLeft, Copy, Monitor, Palette, AlertTriangle, Users, Pencil, Star, Download, PlusCircle, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { TeamTotalScores } from '@/components/quiz/team-total-scores';
 import {
@@ -72,14 +72,52 @@ export default function SettingsPage() {
   
   const handlePointValueChange = (index: number, newValue: string) => {
     const parsedValue = parseInt(newValue, 10);
+    // Don't allow NaN, but do allow 0
     if (!isNaN(parsedValue)) {
         setQuizState(prev => {
             const newPointValues = [...prev.pointValues];
-            newPointValues[index] = parsedValue;
+            // Find the item to update, making sure it's not the 'WICKET' string
+            const numberValues = newPointValues.filter(v => typeof v === 'number');
+            const valueToUpdate = numberValues[index];
+            const originalIndex = newPointValues.findIndex(v => v === valueToUpdate);
+            
+            if(originalIndex !== -1) {
+              newPointValues[originalIndex] = parsedValue;
+            }
+
             return { ...prev, pointValues: newPointValues };
         });
     }
   };
+
+  const addPointValue = () => {
+    setQuizState(prev => {
+        const newPointValues = [...prev.pointValues];
+        // Insert a new value (e.g., 5) before 'WICKET'
+        const wicketIndex = newPointValues.findIndex(v => v === 'WICKET');
+        if (wicketIndex !== -1) {
+            newPointValues.splice(wicketIndex, 0, 5);
+        } else {
+            newPointValues.push(5);
+        }
+        return { ...prev, pointValues: newPointValues };
+    });
+  };
+
+  const removePointValue = (indexToRemove: number) => {
+    setQuizState(prev => {
+        const newPointValues = [...prev.pointValues];
+        const numberValues = newPointValues.filter(v => typeof v === 'number');
+        const valueToRemove = numberValues[indexToRemove];
+        const originalIndex = newPointValues.findIndex(v => v === valueToRemove);
+
+        if (originalIndex !== -1) {
+            newPointValues.splice(originalIndex, 1);
+        }
+        return { ...prev, pointValues: newPointValues };
+    });
+  };
+
 
   const handleThemeChange = (theme: string) => {
     setQuizState(prev => ({
@@ -128,6 +166,8 @@ export default function SettingsPage() {
     }
   }
 
+  const numericPointValues = isClient ? quizState.pointValues.filter(v => typeof v === 'number') as number[] : [];
+
   return (
     <div className="flex min-h-screen flex-col items-center p-4 bg-muted/20">
       <Card className="w-full max-w-4xl shadow-2xl">
@@ -161,11 +201,32 @@ export default function SettingsPage() {
                 </div>
               </div>
                <div className="space-y-2">
-                <Label className="flex items-center gap-2"><Star /> Score Button Values</Label>
+                <div className="flex items-center gap-2 justify-between">
+                    <Label className="flex items-center gap-2"><Star /> Score Button Values</Label>
+                    <Button variant="ghost" size="sm" onClick={addPointValue}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
+                </div>
                 <div className="grid grid-cols-4 gap-2">
-                    {isClient && quizState.pointValues.map((value, index) => (
-                        <Input key={index} type="number" value={value} onChange={(e) => handlePointValueChange(index, e.target.value)} className="text-center" />
+                    {numericPointValues.map((value, index) => (
+                        <div key={index} className="relative group">
+                            <Input 
+                                type="number" 
+                                value={value} 
+                                onChange={(e) => handlePointValueChange(index, e.target.value)} 
+                                className="text-center pr-6" 
+                            />
+                            <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="absolute right-0 top-0 h-full w-8 opacity-0 group-hover:opacity-100"
+                                onClick={() => removePointValue(index)}
+                            >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                        </div>
                     ))}
+                     <Button variant="destructive" disabled className="h-10 text-base font-bold">
+                        WICKET
+                    </Button>
                 </div>
               </div>
             </div>
@@ -302,5 +363,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
