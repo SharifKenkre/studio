@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Monitor, Palette, AlertTriangle, Users, Pencil, Star, Download, PlusCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Monitor, Palette, AlertTriangle, Users, Pencil, Star, Download, PlusCircle, Trash2, Copy } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { TeamTotalScores } from '@/components/quiz/team-total-scores';
 import {
@@ -241,7 +241,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
                 <Label className="text-lg font-semibold flex items-center gap-2"><Palette /> Appearance</Label>
                  <div className="grid grid-cols-2 gap-2">
-                    {themes.map(theme => (
+                    {isClient && themes.map(theme => (
                     <Button
                         key={theme}
                         variant={quizState.monitorSettings.theme === theme ? 'default' : 'outline'}
@@ -253,7 +253,7 @@ export default function SettingsPage() {
                     ))}
                     <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant={quizState.monitorSettings.theme === 'custom' ? 'default' : 'outline'}>
+                        <Button variant={isClient && quizState.monitorSettings.theme === 'custom' ? 'default' : 'outline'}>
                         <Palette className="mr-2" /> Custom
                         </Button>
                     </DialogTrigger>
@@ -310,7 +310,7 @@ export default function SettingsPage() {
                     </p>
                 </div>
                 <Switch
-                    checked={quizState.monitorSettings.compact}
+                    checked={isClient && quizState.monitorSettings.compact}
                     onCheckedChange={handleCompactChange}
                 />
                </div>
@@ -367,5 +367,6 @@ export default function SettingsPage() {
       </Card>
     </div>
   );
+}
 
     
