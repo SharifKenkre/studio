@@ -103,11 +103,12 @@ export default function MonitorPage() {
   }
 
   return (
-    <main className={cn("flex-grow p-4 md:p-8 flex flex-col gap-8", quizState.monitorSettings.compact ? "space-y-4" : "space-y-8")}>
-      <header className="text-center relative">
+    <main className={cn("flex-grow p-4 md:p-8 flex flex-col items-center justify-center gap-8 w-full")}>
+      <header className="w-full max-w-7xl mx-auto text-center">
         <h1 className="text-5xl font-bold font-headline text-primary">{quizState.quizTitle}</h1>
         <p className="text-muted-foreground">Scores update in real-time as they are entered.</p>
       </header>
+      
       <div className="w-full max-w-7xl mx-auto">
         <TeamTotalScores />
       </div>

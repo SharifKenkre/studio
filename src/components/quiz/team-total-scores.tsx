@@ -45,13 +45,16 @@ export function TeamTotalScores() {
   const [previewScores, setPreviewScores] = useState<PreviewScore[]>([]);
 
   useEffect(() => {
+    // This effect runs only on the client, after the component has mounted.
+    // This ensures that the random data generation for the preview doesn't cause
+    // a hydration mismatch between the server and client.
     setIsMounted(true);
     setPreviewScores(
       Array.from({ length: 4 }).map((_, i) => ({
         name: `Team ${i + 1}`,
         runs: Math.floor(Math.random() * 200),
         wickets: Math.floor(Math.random() * 10),
-        height: Math.random() * 60 + 20,
+        height: Math.random() * 60 + 20, // Not used, but kept for potential future use
       }))
     );
   }, []);
@@ -61,6 +64,8 @@ export function TeamTotalScores() {
     monitorSettings.compact ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
   );
 
+  // On the server, and on the initial client render, render a skeleton UI
+  // to prevent hydration errors.
   if (!isMounted) {
     return (
         <div className={gridClasses}>
@@ -69,22 +74,33 @@ export function TeamTotalScores() {
     );
   }
   
+  // After mounting on the client, if there are no teams, show the animated preview.
   if (numTeams === 0) {
     return (
-      <div className={gridClasses}>
-        {previewScores.map((preview, index) => (
-            <TeamScoreCard 
-                key={index} 
-                name={preview.name} 
-                runs={preview.runs}
-                wickets={preview.wickets}
-                isCompact={monitorSettings.compact}
-             />
-        ))}
-      </div>
+      <Card className={cn("shadow-lg", quizState.monitorSettings.compact && "p-2")}>
+        <CardHeader>
+            <CardTitle className={cn("text-3xl font-bold font-headline text-center", quizState.monitorSettings.compact && "text-xl")}>
+                Scoreboard
+            </CardTitle>
+        </CardHeader>
+        <CardContent>
+            <div className={gridClasses}>
+                {previewScores.map((preview, index) => (
+                    <TeamScoreCard 
+                        key={index} 
+                        name={preview.name} 
+                        runs={preview.runs}
+                        wickets={preview.wickets}
+                        isCompact={monitorSettings.compact}
+                    />
+                ))}
+            </div>
+        </CardContent>
+      </Card>
     );
   }
 
+  // Once teams are set up, display the actual scores.
   const teamTotals = Array.from({ length: numTeams }, (_, teamIndex) => {
     let totalRuns = 0;
     let totalWickets = 0;
@@ -108,16 +124,25 @@ export function TeamTotalScores() {
   });
 
   return (
-    <div className={gridClasses}>
-      {teamTotals.map((total, index) => (
-         <TeamScoreCard 
-            key={index} 
-            name={teamNames[index] || `Team ${index + 1}`} 
-            runs={total.runs}
-            wickets={total.wickets}
-            isCompact={monitorSettings.compact}
-         />
-      ))}
-    </div>
+     <Card className={cn("shadow-lg", quizState.monitorSettings.compact && "p-2")}>
+        <CardHeader>
+            <CardTitle className={cn("text-3xl font-bold font-headline text-center", quizState.monitorSettings.compact && "text-xl")}>
+                Scoreboard
+            </CardTitle>
+        </CardHeader>
+        <CardContent>
+            <div className={gridClasses}>
+            {teamTotals.map((total, index) => (
+                <TeamScoreCard 
+                    key={index} 
+                    name={teamNames[index] || `Team ${index + 1}`} 
+                    runs={total.runs}
+                    wickets={total.wickets}
+                    isCompact={monitorSettings.compact}
+                />
+            ))}
+            </div>
+        </CardContent>
+    </Card>
   );
 }
