@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { RoundScores } from '@/components/quiz/round-scores';
 import { cn } from '@/lib/utils';
+import { QuizLabsLogo } from '@/components/quiz/quiz-labs-logo';
 
 export default function MonitorPage() {
   const { quizState, setQuizState } = useQuiz();
@@ -103,7 +104,8 @@ export default function MonitorPage() {
   }
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col flex-1 min-h-screen relative">
+        <QuizLabsLogo />
         <main className={cn("flex-grow p-4 md:p-8 flex flex-col items-center justify-center gap-8 w-full")}>
             <header className="w-full max-w-7xl mx-auto text-center">
                 <h1 className="text-5xl font-bold font-headline text-primary">{quizState.quizTitle}</h1>
@@ -120,7 +122,7 @@ export default function MonitorPage() {
                 </div>
             )}
         </main>
-        <footer className="p-4 text-right">
+        <footer className="p-4 text-center">
             <p className="text-sm text-muted-foreground">Made by Sharif</p>
         </footer>
     </div>

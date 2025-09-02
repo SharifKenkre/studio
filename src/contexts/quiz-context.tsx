@@ -25,6 +25,7 @@ export type QuizState = {
     theme: string;
     compact: boolean;
     customTheme?: CustomTheme;
+    showLogo: boolean;
   };
   monitorHeartbeat: number | null;
 };
@@ -47,6 +48,7 @@ export const initialState: QuizState = {
       card: '234 67% 99%',
       primary: '231 48% 48%',
     },
+    showLogo: true,
   },
   monitorHeartbeat: null,
 };

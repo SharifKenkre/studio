@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Monitor, Palette, AlertTriangle, Users, Pencil, Star, Download, PlusCircle, Trash2, Copy } from 'lucide-react';
+import { ArrowLeft, Monitor, Palette, AlertTriangle, Users, Pencil, Star, Download, PlusCircle, Trash2, Copy, Image as ImageIcon } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { TeamTotalScores } from '@/components/quiz/team-total-scores';
 import {
@@ -51,19 +51,18 @@ export default function SettingsPage() {
     }
   );
   
-  // Local state to manage the temporary string values of the inputs
-  const [pointInputValues, setPointInputValues] = useState<(string | number)[]>([]);
+  const [pointInputValues, setPointInputValues] = useState<(string)[]>([]);
 
   useEffect(() => {
     setIsClient(true);
     // Sync local input state with global quiz state on mount
-    setPointInputValues(quizState.pointValues.filter(v => typeof v === 'number'));
+    setPointInputValues(quizState.pointValues.filter((v): v is number => typeof v === 'number').map(String));
   }, []);
   
   useEffect(() => {
     // Keep local state in sync when global state changes from another source
     if (isClient) {
-        setPointInputValues(quizState.pointValues.filter(v => typeof v === 'number'));
+        setPointInputValues(quizState.pointValues.filter((v): v is number => typeof v === 'number').map(String));
     }
   }, [quizState.pointValues, isClient])
 
@@ -94,16 +93,17 @@ export default function SettingsPage() {
      const parsedValue = parseInt(String(value), 10);
 
      setQuizState(prev => {
-        const numericPointValues = prev.pointValues.filter(v => typeof v === 'number') as number[];
+        const numericPointValues = prev.pointValues.filter((v): v is number => typeof v === 'number');
         if (!isNaN(parsedValue)) {
             numericPointValues[indexToChange] = parsedValue;
         } else {
-            // If invalid, remove it from the list on blur
-            numericPointValues.splice(indexToChange, 1);
+            // If input is not a valid number, we can either revert or remove.
+            // For now, let's just ensure the global state has valid numbers.
+            // The local state `pointInputValues` will hold the potentially invalid string temporarily.
         }
         
         const wicketValue = prev.pointValues.find(v => v === 'WICKET');
-        const newPointValues = [...numericPointValues];
+        const newPointValues = [...numericPointValues.filter(v => !isNaN(v))];
         if(wicketValue) newPointValues.push(wicketValue);
 
         return { ...prev, pointValues: newPointValues };
@@ -112,13 +112,13 @@ export default function SettingsPage() {
 
 
   const addPointValue = () => {
-    const newPointInputValues = [...pointInputValues, ''];
-    setPointInputValues(newPointInputValues);
+    // Add an empty string to allow user to input a new value
+    setPointInputValues(prev => [...prev, '']);
   };
 
   const removePointValue = (indexToRemove: number) => {
     setQuizState(prev => {
-        const numericPointValues = prev.pointValues.filter(v => typeof v === 'number') as number[];
+        const numericPointValues = prev.pointValues.filter((v): v is number => typeof v === 'number');
         numericPointValues.splice(indexToRemove, 1);
         
         const wicketValue = prev.pointValues.find(v => v === 'WICKET');
@@ -143,6 +143,13 @@ export default function SettingsPage() {
       monitorSettings: { ...prev.monitorSettings, compact: checked }
     }));
   };
+  
+  const handleShowLogoChange = (checked: boolean) => {
+    setQuizState(prev => ({
+        ...prev,
+        monitorSettings: { ...prev.monitorSettings, showLogo: checked }
+    }));
+  }
 
   const handleCustomThemeChange = (colorName: keyof CustomTheme, value: string) => {
     setCustomTheme(prev => ({ ...prev, [colorName]: value }));
@@ -223,7 +230,8 @@ export default function SettingsPage() {
                                 value={value} 
                                 onChange={(e) => handlePointValueChange(index, e.target.value)} 
                                 onBlur={() => handlePointValueBlur(index)}
-                                className="text-center pr-6" 
+                                className="text-center pr-6"
+                                placeholder="Value"
                             />
                             <Button 
                                 variant="ghost" 
@@ -320,6 +328,18 @@ export default function SettingsPage() {
                     onCheckedChange={handleCompactChange}
                 />
                </div>
+               <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2"><ImageIcon className="h-4 w-4" /> Show Logo on Monitor</Label>
+                    <p className="text-sm text-muted-foreground">
+                        Display the QuizLabs logo in the top-left corner.
+                    </p>
+                </div>
+                <Switch
+                    checked={isClient && quizState.monitorSettings.showLogo}
+                    onCheckedChange={handleShowLogoChange}
+                />
+               </div>
             </div>
 
             <Separator />
@@ -374,5 +394,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    
