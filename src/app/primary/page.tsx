@@ -56,6 +56,13 @@ export default function PrimaryPage() {
   }, [quizState.verificationCode, router, isClient]);
 
    useEffect(() => {
+    // Initial check
+    if (quizState.monitorHeartbeat && (Date.now() - quizState.monitorHeartbeat) < HEARTBEAT_TIMEOUT) {
+      setIsMonitorConnected(true);
+    } else {
+      setIsMonitorConnected(false);
+    }
+
     const connectionCheckInterval = setInterval(() => {
       if (quizState.monitorHeartbeat && (Date.now() - quizState.monitorHeartbeat) < HEARTBEAT_TIMEOUT) {
         setIsMonitorConnected(true);
