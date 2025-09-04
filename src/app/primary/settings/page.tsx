@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useQuiz } from '@/contexts/quiz-context';
+import { useQuiz, initialState } from '@/contexts/quiz-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Monitor, Palette, AlertTriangle, Users, Pencil, Star, Download, PlusCircle, Trash2, Copy, Image as ImageIcon } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { TeamTotalScores } from '@/components/quiz/team-total-scores';
@@ -39,12 +39,13 @@ import { exportToCsv } from '@/lib/csv';
 const themes = ['default', 'dark', 'light'];
 
 export default function SettingsPage() {
-  const { quizState, setQuizState, initialState } = useQuiz();
+  const { quizState, setQuizState, loadQuiz, isLoaded, createQuiz } = useQuiz();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
-  const [isClient, setIsClient] = useState(false);
+  
   const [customTheme, setCustomTheme] = useState<CustomTheme>(
-    quizState.monitorSettings.customTheme || {
+    quizState?.monitorSettings.customTheme || {
       background: '234 67% 94%',
       card: '234 67% 99%',
       primary: '231 48% 48%',
@@ -54,28 +55,39 @@ export default function SettingsPage() {
   const [pointInputValues, setPointInputValues] = useState<(string)[]>([]);
 
   useEffect(() => {
-    setIsClient(true);
-    // Sync local input state with global quiz state on mount
-    setPointInputValues(quizState.pointValues.filter((v): v is number => typeof v === 'number').map(String));
-  }, []);
+    const id = searchParams.get('id');
+    if (id) {
+        loadQuiz(id);
+    } else {
+        router.push('/');
+    }
+  }, [searchParams, loadQuiz, router]);
   
   useEffect(() => {
-    // Keep local state in sync when global state changes from another source
-    if (isClient) {
+    // Sync local state with global quiz state on mount or when quizState changes
+    if (quizState) {
         setPointInputValues(quizState.pointValues.filter((v): v is number => typeof v === 'number').map(String));
+        if (quizState.monitorSettings.customTheme) {
+            setCustomTheme(quizState.monitorSettings.customTheme);
+        }
     }
-  }, [quizState.pointValues, isClient])
+  }, [quizState]);
 
+  if (!isLoaded || !quizState) {
+      return (
+        <div className="flex min-h-screen items-center justify-center">
+            <p>Loading Settings...</p>
+        </div>
+      );
+  }
 
   const handleQuizTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuizState(prev => ({
-        ...prev,
-        quizTitle: e.target.value
-    }));
+    setQuizState(prev => prev ? { ...prev, quizTitle: e.target.value } : null);
   };
 
   const handleTeamNameChange = (index: number, newName: string) => {
     setQuizState(prev => {
+        if (!prev) return null;
         const newTeamNames = [...prev.teamNames];
         newTeamNames[index] = newName;
         return { ...prev, teamNames: newTeamNames };
@@ -93,11 +105,11 @@ export default function SettingsPage() {
      const parsedValue = parseInt(value, 10);
 
      setQuizState(prev => {
+        if (!prev) return null;
         const numericPointValues = prev.pointValues.filter((v): v is number => typeof v === 'number');
         if (!isNaN(parsedValue)) {
             numericPointValues[indexToChange] = parsedValue;
         } else {
-            // If input is not a valid number, remove it from the list
              numericPointValues.splice(indexToChange, 1);
         }
         
@@ -116,6 +128,7 @@ export default function SettingsPage() {
 
   const removePointValue = (indexToRemove: number) => {
     setQuizState(prev => {
+        if (!prev) return null;
         const numericPointValues = prev.pointValues.filter((v): v is number => typeof v === 'number');
         numericPointValues.splice(indexToRemove, 1);
         
@@ -129,24 +142,24 @@ export default function SettingsPage() {
 
 
   const handleThemeChange = (theme: string) => {
-    setQuizState(prev => ({
+    setQuizState(prev => prev ? {
       ...prev,
       monitorSettings: { ...prev.monitorSettings, theme }
-    }));
+    } : null);
   };
 
   const handleCompactChange = (checked: boolean) => {
-    setQuizState(prev => ({
+    setQuizState(prev => prev ? {
       ...prev,
       monitorSettings: { ...prev.monitorSettings, compact: checked }
-    }));
+    } : null);
   };
   
   const handleShowLogoChange = (checked: boolean) => {
-    setQuizState(prev => ({
+    setQuizState(prev => prev ? {
         ...prev,
         monitorSettings: { ...prev.monitorSettings, showLogo: checked }
-    }));
+    } : null);
   }
 
   const handleCustomThemeChange = (colorName: keyof CustomTheme, value: string) => {
@@ -154,25 +167,27 @@ export default function SettingsPage() {
   };
   
   const applyCustomTheme = () => {
-     setQuizState(prev => ({
+     setQuizState(prev => prev ? {
       ...prev,
       monitorSettings: { ...prev.monitorSettings, theme: 'custom', customTheme }
-    }));
+    } : null);
   };
 
   const handleCopyCode = () => {
-    if (quizState.verificationCode) {
-      navigator.clipboard.writeText(quizState.verificationCode);
+    if (quizState?.id) {
+      navigator.clipboard.writeText(quizState.id);
       toast({ title: 'Code Copied!', description: 'The verification code has been copied to your clipboard.' });
     }
   };
 
   const handleEndQuiz = () => {
-    setQuizState(initialState);
+    // Ending the quiz now means navigating back to the home page.
+    // The state in firestore will remain but will no longer be active.
     router.push('/');
   }
 
   const handleExport = () => {
+    if (!quizState) return;
     try {
         exportToCsv(quizState);
         toast({ title: 'Export Successful', description: 'Your quiz data has been downloaded as a CSV file.' });
@@ -210,7 +225,7 @@ export default function SettingsPage() {
                <div className="space-y-2">
                 <Label className="flex items-center gap-2"><Users /> Team Names</Label>
                 <div className="grid grid-cols-2 gap-2">
-                    {isClient && quizState.teamNames.map((name, index) => (
+                    {quizState.teamNames.map((name, index) => (
                         <Input key={index} value={name} onChange={(e) => handleTeamNameChange(index, e.target.value)} />
                     ))}
                 </div>
@@ -221,7 +236,7 @@ export default function SettingsPage() {
                     <Button variant="ghost" size="sm" onClick={addPointValue}><PlusCircle className="mr-2 h-4 w-4" /> Add</Button>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                    {isClient && pointInputValues.map((value, index) => (
+                    {pointInputValues.map((value, index) => (
                         <div key={`point-value-${index}`} className="relative group">
                             <Input 
                                 type="text"
@@ -253,7 +268,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
                 <Label className="text-lg font-semibold flex items-center gap-2"><Palette /> Appearance</Label>
                  <div className="grid grid-cols-2 gap-2">
-                    {isClient && themes.map(theme => (
+                    {themes.map(theme => (
                     <Button
                         key={theme}
                         variant={quizState.monitorSettings.theme === theme ? 'default' : 'outline'}
@@ -265,7 +280,7 @@ export default function SettingsPage() {
                     ))}
                     <Dialog>
                     <DialogTrigger asChild>
-                        <Button variant={isClient && quizState.monitorSettings.theme === 'custom' ? 'default' : 'outline'}>
+                        <Button variant={quizState.monitorSettings.theme === 'custom' ? 'default' : 'outline'}>
                         <Palette className="mr-2" /> Custom
                         </Button>
                     </DialogTrigger>
@@ -274,7 +289,7 @@ export default function SettingsPage() {
                         <DialogTitle>Create Custom Theme</DialogTitle>
                         <DialogDescription>
                             Pick your own colors to create a unique theme.
-                        </Description>
+                        </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                         <div className="flex items-center justify-between">
@@ -322,7 +337,7 @@ export default function SettingsPage() {
                     </p>
                 </div>
                 <Switch
-                    checked={isClient && quizState.monitorSettings.compact}
+                    checked={quizState.monitorSettings.compact}
                     onCheckedChange={handleCompactChange}
                 />
                </div>
@@ -334,7 +349,7 @@ export default function SettingsPage() {
                     </p>
                 </div>
                 <Switch
-                    checked={isClient && quizState.monitorSettings.showLogo}
+                    checked={quizState.monitorSettings.showLogo}
                     onCheckedChange={handleShowLogoChange}
                 />
                </div>
@@ -350,14 +365,10 @@ export default function SettingsPage() {
                 <div className="space-y-2 rounded-lg border p-4 bg-background">
                      <Label className="text-base font-semibold">Verification Code</Label>
                      <div className="flex items-center justify-center gap-2">
-                        {isClient && (
-                          <>
-                            <p className="text-4xl font-bold font-mono tracking-widest text-primary">
-                                {quizState.verificationCode}
-                            </p>
-                            <Button variant="ghost" size="icon" onClick={handleCopyCode}><Copy className="h-5 w-5"/></Button>
-                          </>
-                        )}
+                        <p className="text-4xl font-bold font-mono tracking-widest text-primary">
+                            {quizState.id}
+                        </p>
+                        <Button variant="ghost" size="icon" onClick={handleCopyCode}><Copy className="h-5 w-5"/></Button>
                     </div>
                 </div>
                 <AlertDialog>
@@ -368,14 +379,14 @@ export default function SettingsPage() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        This will permanently delete all current quiz data, including all rounds and scores. This action cannot be undone.
+                        This will not delete the quiz data, but it will return you to the home screen. You can reconnect to the quiz later using the verification code.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleEndQuiz}>Yes, end the quiz</AlertDialogAction>
+                      <AlertDialogAction onClick={handleEndQuiz}>Yes, end session</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -392,5 +403,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
-    

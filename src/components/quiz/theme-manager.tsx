@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useQuiz } from '@/contexts/quiz-context';
@@ -53,9 +54,14 @@ const setCssVariables = (customTheme: CustomTheme) => {
 
 export function ThemeManager({ children }: { children: React.ReactNode }) {
   const { quizState } = useQuiz();
-  const { theme, customTheme } = quizState.monitorSettings;
+  
+  // We can only get theme settings if quizState is loaded.
+  const monitorSettings = quizState?.monitorSettings;
 
   useEffect(() => {
+    if (!monitorSettings) return; // Don't run if settings are not available
+    
+    const { theme, customTheme } = monitorSettings;
     const body = document.body;
     body.classList.remove('theme-default', 'theme-dark', 'theme-light', 'theme-custom');
     
@@ -64,7 +70,7 @@ export function ThemeManager({ children }: { children: React.ReactNode }) {
     }
     body.classList.add(`theme-${theme}`);
 
-  }, [theme, customTheme]);
+  }, [monitorSettings]);
 
   return <>{children}</>;
 }

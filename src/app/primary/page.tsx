@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useQuiz, type Score } from '@/contexts/quiz-context';
+import { useQuiz, type Score, initialState } from '@/contexts/quiz-context';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,9 +12,9 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
-import { ArrowLeft, Copy, RefreshCw, Settings, ArrowRight, WifiOff, Wifi } from 'lucide-react';
+import { ArrowLeft, Copy, RefreshCw, Settings, ArrowRight, Wifi, WifiOff } from 'lucide-react';
 import { ScoringGrid } from '@/components/quiz/scoring-grid';
 import { PointButtons } from '@/components/quiz/point-buttons';
 import { useToast } from '@/hooks/use-toast';
@@ -32,75 +32,59 @@ import {
 import { PingIndicator } from '@/components/quiz/ping-indicator';
 
 
-const HEARTBEAT_TIMEOUT = 5000; // 5 seconds
-
 export default function PrimaryPage() {
-  const { quizState, setQuizState, initialState } = useQuiz();
+  const { quizState, setQuizState, loadQuiz, isLoaded } = useQuiz();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  
   const [roundName, setRoundName] = useState('');
   const [isEndRoundAlertOpen, setIsEndRoundAlertOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-  const [isMonitorConnected, setIsMonitorConnected] = useState(false);
-
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (isClient && !quizState.verificationCode) {
-      router.push('/');
+    const id = searchParams.get('id');
+    if (id) {
+      loadQuiz(id);
+    } else {
+        // If there is no ID, we should not be on this page.
+        router.push('/');
     }
-  }, [quizState.verificationCode, router, isClient]);
+  }, [searchParams, loadQuiz, router]);
 
-   useEffect(() => {
-    if (!quizState.monitorHeartbeat) {
-        setIsMonitorConnected(false);
-        return;
-    }
-
-    const checkConnection = () => {
-       if (quizState.monitorHeartbeat && (Date.now() - quizState.monitorHeartbeat) < HEARTBEAT_TIMEOUT) {
-        setIsMonitorConnected(true);
-      } else {
-        setIsMonitorConnected(false);
-      }
-    }
-
-    checkConnection();
-    const connectionCheckInterval = setInterval(checkConnection, 3000); 
-
-    return () => clearInterval(connectionCheckInterval);
-  }, [quizState.monitorHeartbeat]);
 
   const handleNewCode = () => {
-    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setQuizState((prev) => ({ ...prev, verificationCode: newCode }));
-    toast({ title: 'New code generated', description: `The new code is ${newCode}` });
+    // This functionality is now handled by creating a new quiz from the home page.
+    // For now, we can just show a toast.
+    toast({ title: 'Create New Quiz', description: `To create a new quiz, please return to the home page.` });
   };
 
   const handleCopyCode = () => {
-    if (quizState.verificationCode) {
-      navigator.clipboard.writeText(quizState.verificationCode);
+    if (quizState?.id) {
+      navigator.clipboard.writeText(quizState.id);
       toast({ title: 'Code Copied!', description: 'The verification code has been copied to your clipboard.' });
     }
   };
 
   const handleSetTeams = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!quizState) return;
+
     const formData = new FormData(e.currentTarget);
     const teams = Number(formData.get('teams'));
     if (teams > 0 && teams <= 20) {
-      setQuizState((prev) => ({
-        ...prev,
-        numTeams: teams,
-        teamNames: Array.from({ length: teams }, (_, i) => `Team ${i + 1}`),
-        activeCell: { question: 0, team: 0 },
-        scores: {},
-        rounds: prev.rounds || [],
-        numQuestions: 0,
-      }));
+      setQuizState((prev) => {
+        if (!prev) return null;
+        return {
+            ...prev,
+            numTeams: teams,
+            teamNames: Array.from({ length: teams }, (_, i) => `Team ${i + 1}`),
+            // Reset scores when teams are set
+            scores: {},
+            rounds: prev.rounds || [],
+            numQuestions: 0,
+            activeCell: { question: 0, team: 0 },
+        }
+      });
     } else {
       toast({
         variant: 'destructive',
@@ -111,11 +95,12 @@ export default function PrimaryPage() {
   };
 
   const handleScore = (points: number | 'WICKET') => {
-    if (!quizState.activeCell) return;
+    if (!quizState?.activeCell) return;
 
     const { question, team } = quizState.activeCell;
 
     setQuizState((prev) => {
+      if (!prev) return null;
       const newScores = { ...prev.scores };
       const score: Score = {
         runs: points === 'WICKET' ? 0 : points,
@@ -147,10 +132,11 @@ export default function PrimaryPage() {
   };
 
   const handleNextQuestion = () => {
-     if (!quizState.activeCell) return;
+     if (!quizState?.activeCell) return;
      const currentQuestion = quizState.activeCell.question;
 
      setQuizState(prev => {
+        if (!prev) return null;
         const newScores = { ...prev.scores };
         if (!newScores[currentQuestion]) {
             newScores[currentQuestion] = {};
@@ -175,11 +161,13 @@ export default function PrimaryPage() {
   };
 
   const handleEndRound = () => {
+    if (!quizState) return;
     if (!roundName.trim()) {
       toast({ variant: 'destructive', title: 'Invalid Over Name', description: 'Please enter a name for this over.' });
       return;
     }
     setQuizState(prev => {
+        if (!prev) return null;
       const roundToAdd = {
         name: roundName,
         scores: prev.scores
@@ -198,10 +186,10 @@ export default function PrimaryPage() {
     toast({ title: 'Over Ended', description: `Over "${roundName}" has been saved.` });
   };
   
-  if (!isClient || !quizState.verificationCode) {
+  if (!isLoaded || !quizState) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p>Loading...</p>
+        <p>Loading Quiz...</p>
       </div>
     );
   }
@@ -222,7 +210,7 @@ export default function PrimaryPage() {
                 <Label className="text-sm text-muted-foreground">Verification Code</Label>
                 <div className="flex items-center justify-center gap-2">
                     <p className="text-5xl font-bold font-mono tracking-widest text-primary bg-primary/10 px-4 py-2 rounded-lg">
-                        {quizState.verificationCode}
+                        {quizState.id}
                     </p>
                     <Button variant="ghost" size="icon" onClick={handleCopyCode}><Copy className="h-5 w-5"/></Button>
                     <Button variant="ghost" size="icon" onClick={handleNewCode}><RefreshCw className="h-5 w-5"/></Button>
@@ -246,12 +234,12 @@ export default function PrimaryPage() {
       <header className="flex-shrink-0 flex items-center justify-between">
         <h1 className="text-2xl font-bold font-headline">Scoring</h1>
         <div className="flex items-center gap-4">
-            <PingIndicator isConnected={isMonitorConnected} />
+            <PingIndicator isConnected={true} />
              <div className="text-right">
                 <p className="text-sm text-muted-foreground">Current Over</p>
                 <p className="font-bold">{quizState.numQuestions} Balls</p>
             </div>
-            <Button variant="outline" size="icon" onClick={() => router.push('/primary/settings')}>
+            <Button variant="outline" size="icon" onClick={() => router.push(`/primary/settings?id=${quizState.id}`)}>
                 <Settings />
                 <span className="sr-only">Settings</span>
             </Button>
@@ -259,22 +247,15 @@ export default function PrimaryPage() {
       </header>
 
       <main className="flex-grow overflow-auto relative">
-        {!isMonitorConnected && (
-            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center text-center">
-                <WifiOff className="h-16 w-16 text-destructive" />
-                <h2 className="mt-4 text-2xl font-bold font-headline">Monitor Disconnected</h2>
-                <p className="text-muted-foreground">Scoring is paused. Please ensure the monitor device is connected.</p>
-            </div>
-        )}
         <ScoringGrid />
       </main>
       
       <footer className="flex-shrink-0">
-        <PointButtons onScore={handleScore} disabled={!isMonitorConnected} />
+        <PointButtons onScore={handleScore} />
         <div className="mt-4 flex justify-between items-center">
              <AlertDialog open={isEndRoundAlertOpen} onOpenChange={setIsEndRoundAlertOpen}>
               <AlertDialogTrigger asChild>
-                <Button variant="secondary" disabled={!isMonitorConnected}>End Over</Button>
+                <Button variant="secondary">End Over</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -298,7 +279,7 @@ export default function PrimaryPage() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button onClick={handleNextQuestion} disabled={!isMonitorConnected}>
+            <Button onClick={handleNextQuestion}>
                 Next Ball <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
         </div>

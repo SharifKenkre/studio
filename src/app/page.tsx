@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -11,17 +12,15 @@ import {
 } from '@/components/ui/card';
 import { useQuiz } from '@/contexts/quiz-context';
 import { Monitor, MousePointerClick, Zap } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const { setQuizState, initialState } = useQuiz();
+  const { createQuiz } = useQuiz();
+  const router = useRouter();
 
   const handleSelectPrimary = () => {
-    const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-    setQuizState({
-      ...initialState,
-      verificationCode: newCode,
-    });
+    const newQuizId = createQuiz();
+    router.push(`/primary?id=${newQuizId}`);
   };
 
   return (
@@ -48,11 +47,9 @@ export default function Home() {
           </CardHeader>
           <CardContent />
           <CardFooter>
-            <Link href="/monitor" className="w-full">
-              <Button className="w-full" variant="outline">
+             <Button className="w-full" variant="outline" onClick={() => router.push('/monitor')}>
                 Open Monitor
               </Button>
-            </Link>
           </CardFooter>
         </Card>
         <Card className="transform hover:scale-105 transition-transform duration-300 shadow-lg hover:shadow-2xl">
@@ -65,11 +62,9 @@ export default function Home() {
           </CardHeader>
           <CardContent />
           <CardFooter>
-            <Link href="/primary" className="w-full">
               <Button className="w-full" onClick={handleSelectPrimary}>
                 Start Scoring
               </Button>
-            </Link>
           </CardFooter>
         </Card>
       </div>
