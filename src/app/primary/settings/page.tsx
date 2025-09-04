@@ -90,16 +90,15 @@ export default function SettingsPage() {
   
   const handlePointValueBlur = (indexToChange: number) => {
      const value = pointInputValues[indexToChange];
-     const parsedValue = parseInt(String(value), 10);
+     const parsedValue = parseInt(value, 10);
 
      setQuizState(prev => {
         const numericPointValues = prev.pointValues.filter((v): v is number => typeof v === 'number');
         if (!isNaN(parsedValue)) {
             numericPointValues[indexToChange] = parsedValue;
         } else {
-            // If input is not a valid number, we can either revert or remove.
-            // For now, let's just ensure the global state has valid numbers.
-            // The local state `pointInputValues` will hold the potentially invalid string temporarily.
+            // If input is not a valid number, remove it from the list
+             numericPointValues.splice(indexToChange, 1);
         }
         
         const wicketValue = prev.pointValues.find(v => v === 'WICKET');
@@ -112,7 +111,6 @@ export default function SettingsPage() {
 
 
   const addPointValue = () => {
-    // Add an empty string to allow user to input a new value
     setPointInputValues(prev => [...prev, '']);
   };
 
@@ -276,7 +274,7 @@ export default function SettingsPage() {
                         <DialogTitle>Create Custom Theme</DialogTitle>
                         <DialogDescription>
                             Pick your own colors to create a unique theme.
-                        </DialogDescription>
+                        </Description>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                         <div className="flex items-center justify-between">
@@ -394,3 +392,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+    
