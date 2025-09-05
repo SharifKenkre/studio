@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useQuiz, type Score, initialState } from '@/contexts/quiz-context';
+import { useQuiz, type Score } from '@/contexts/quiz-context';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
-import { ArrowLeft, Copy, RefreshCw, Settings, ArrowRight, Wifi, WifiOff } from 'lucide-react';
+import { ArrowLeft, Copy, Settings, ArrowRight } from 'lucide-react';
 import { ScoringGrid } from '@/components/quiz/scoring-grid';
 import { PointButtons } from '@/components/quiz/point-buttons';
 import { useToast } from '@/hooks/use-toast';
@@ -31,9 +31,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { PingIndicator } from '@/components/quiz/ping-indicator';
 
+const WICKET_LIMIT = 10;
 
 export default function PrimaryPage() {
-  const { quizState, setQuizState, loadQuiz, isLoaded } = useQuiz();
+  const { quizState, setQuizState, loadQuiz, isLoaded, calculateTotalWickets } = useQuiz();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -47,7 +48,6 @@ export default function PrimaryPage() {
     if (id) {
       loadQuiz(id);
     } else {
-        // If there is no ID, we should not be on this page.
         router.push('/');
     }
   }, [searchParams, loadQuiz, router]);
@@ -55,19 +55,11 @@ export default function PrimaryPage() {
   useEffect(() => {
       if (quizState?.monitorHeartbeat) {
           const timeSinceHeartbeat = Date.now() - quizState.monitorHeartbeat;
-          // If the last heartbeat was less than 10 seconds ago, we consider it connected.
           setIsMonitorConnected(timeSinceHeartbeat < 10000);
       } else {
           setIsMonitorConnected(false);
       }
   }, [quizState?.monitorHeartbeat]);
-
-
-  const handleNewCode = () => {
-    // This functionality is now handled by creating a new quiz from the home page.
-    // For now, we can just show a toast.
-    toast({ title: 'Create New Quiz', description: `To create a new quiz, please return to the home page.` });
-  };
 
   const handleCopyCode = () => {
     if (quizState?.id) {
@@ -89,7 +81,7 @@ export default function PrimaryPage() {
             ...prev,
             numTeams: teams,
             teamNames: Array.from({ length: teams }, (_, i) => `Team ${i + 1}`),
-            // Reset scores when teams are set
+            teamsOut: Array(teams).fill(false),
             scores: {},
             rounds: prev.rounds || [],
             numQuestions: 0,
@@ -105,14 +97,46 @@ export default function PrimaryPage() {
     }
   };
 
+  const getNextAvailableCell = (startTeam: number, startQuestion: number, teamsOut: boolean[], numTeams: number) => {
+    let nextTeam = startTeam;
+    let nextQuestion = startQuestion;
+    const totalTeams = numTeams;
+  
+    // Find the next available team
+    for (let i = 0; i < totalTeams; i++) {
+        nextTeam = (startTeam + i) % totalTeams;
+        if (!teamsOut[nextTeam]) {
+            return { question: nextQuestion, team: nextTeam };
+        }
+    }
+
+    // If all teams are out, move to the next question and find the first available team
+    nextQuestion++;
+    for (let i = 0; i < totalTeams; i++) {
+        if (!teamsOut[i]) {
+            return { question: nextQuestion, team: i };
+        }
+    }
+
+    // If all teams are out for all future questions, return null or an indicator to end the quiz
+    return null;
+  };
+
+
   const handleScore = (points: number | 'WICKET') => {
     if (!quizState?.activeCell) return;
-
     const { question, team } = quizState.activeCell;
+
+    if (quizState.teamsOut[team]) {
+        toast({ variant: 'destructive', title: 'Team Out', description: `${quizState.teamNames[team]} is out of the quiz and cannot score.`});
+        return;
+    }
 
     setQuizState((prev) => {
       if (!prev) return null;
       const newScores = { ...prev.scores };
+      const newTeamsOut = [...prev.teamsOut];
+
       const score: Score = {
         runs: points === 'WICKET' ? 0 : points,
         isWicket: points === 'WICKET',
@@ -122,6 +146,15 @@ export default function PrimaryPage() {
         newScores[question] = {};
       }
       newScores[question][team] = score;
+
+      // Wicket calculation
+      if (points === 'WICKET') {
+        const currentWickets = calculateTotalWickets(team) + 1; // +1 for the one we are adding now
+        if (currentWickets >= WICKET_LIMIT) {
+            newTeamsOut[team] = true;
+            toast({ title: 'Team Out!', description: `${prev.teamNames[team]} has reached 10 wickets.`});
+        }
+      }
 
       let nextTeam = team + 1;
       let nextQuestion = question;
@@ -135,10 +168,10 @@ export default function PrimaryPage() {
       if (nextQuestion > newNumQuestions) {
           newNumQuestions = nextQuestion;
       }
+      
+      const newActiveCell = getNextAvailableCell(nextTeam, nextQuestion, newTeamsOut, prev.numTeams);
 
-      const newActiveCell = { question: nextQuestion, team: nextTeam };
-
-      return { ...prev, scores: newScores, activeCell: newActiveCell, numQuestions: newNumQuestions };
+      return { ...prev, scores: newScores, activeCell: newActiveCell, numQuestions: newNumQuestions, teamsOut: newTeamsOut };
     });
   };
 
@@ -154,18 +187,19 @@ export default function PrimaryPage() {
         }
 
         for (let i = 0; i < prev.numTeams; i++) {
-            if (newScores[currentQuestion][i] === undefined) {
+            if (!prev.teamsOut[i] && newScores[currentQuestion][i] === undefined) {
                 newScores[currentQuestion][i] = { runs: 0, isWicket: false };
             }
         }
         
         const nextQuestion = currentQuestion + 1;
         const newNumQuestions = Math.max(prev.numQuestions, nextQuestion);
+        const newActiveCell = getNextAvailableCell(0, nextQuestion, prev.teamsOut, prev.numTeams);
 
         return {
             ...prev,
             scores: newScores,
-            activeCell: { question: nextQuestion, team: 0 },
+            activeCell: newActiveCell,
             numQuestions: newNumQuestions,
         };
      });
@@ -188,7 +222,7 @@ export default function PrimaryPage() {
         ...prev,
         rounds: [...(prev.rounds || []), roundToAdd],
         scores: {},
-        activeCell: { question: 0, team: 0 },
+        activeCell: getNextAvailableCell(0, 0, prev.teamsOut, prev.numTeams),
         numQuestions: 0,
       };
     });
