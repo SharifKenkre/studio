@@ -57,6 +57,8 @@ export function TeamTotalScores() {
   const [previewScores, setPreviewScores] = useState<PreviewScore[]>([]);
 
   useEffect(() => {
+    // This effect runs only on the client, after the initial render.
+    // This prevents hydration errors by ensuring Math.random() is not run on the server.
     setIsMounted(true);
     setPreviewScores(
       Array.from({ length: 4 }).map((_, i) => ({
@@ -74,6 +76,7 @@ export function TeamTotalScores() {
   );
 
   if (!isMounted) {
+    // On the server and on the initial client render, show skeletons.
     return (
         <div className={containerClasses}>
           {Array.from({ length: 4 }).map((_, index) => <SkeletonCard key={index} isCompact={monitorSettings.compact} />)}
@@ -82,6 +85,7 @@ export function TeamTotalScores() {
   }
   
   if (numTeams === 0) {
+    // Once mounted on the client and if numTeams is 0, show the randomized preview scores.
     return (
       <Card className={cn("shadow-lg", quizState.monitorSettings.compact && "p-2")}>
         <CardHeader>
