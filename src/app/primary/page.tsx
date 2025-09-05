@@ -35,6 +35,7 @@ const getWicketsForTeam = (teamIndex: number, rounds: QuizState['rounds'], score
     let totalWickets = 0;
     
     const processScores = (scoreData: Record<number, Record<number, any>>) => {
+        if (!scoreData) return;
         Object.values(scoreData).forEach(questionScores => {
             const score = questionScores[teamIndex];
             if (score && score.isWicket) {
@@ -159,6 +160,9 @@ export default function PrimaryPage() {
         newScores[question] = {};
       }
       newScores[question][team] = score;
+
+      // Recalculate wickets with the new score included to check if they are now out
+      const newWickets = getWicketsForTeam(team, prev.rounds, newScores);
       
       const newActiveCell = advanceToNextAvailableCell(team, question, newScores, prev.rounds, prev.numTeams);
       const newNumQuestions = Math.max(prev.numQuestions, newActiveCell.question);
@@ -329,5 +333,3 @@ export default function PrimaryPage() {
     </div>
   )
 }
-
-    

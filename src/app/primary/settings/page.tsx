@@ -52,6 +52,7 @@ export default function SettingsPage() {
     }
   );
   
+  // Local state for the string representation of point values for the input fields
   const [pointInputValues, setPointInputValues] = useState<(string)[]>([]);
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function SettingsPage() {
   useEffect(() => {
     // Sync local state with global quiz state on mount or when quizState changes
     if (quizState) {
+        // We only want to manage the numeric point values in this component's inputs
         setPointInputValues(quizState.pointValues.filter((v): v is number => typeof v === 'number').map(String));
         if (quizState.monitorSettings.customTheme) {
             setCustomTheme(quizState.monitorSettings.customTheme);
@@ -94,38 +96,56 @@ export default function SettingsPage() {
     });
   };
   
+  // Update local state as the user types
   const handlePointValueChange = (indexToChange: number, newValue: string) => {
     const newInputValues = [...pointInputValues];
     newInputValues[indexToChange] = newValue;
     setPointInputValues(newInputValues);
   };
   
+  // When the input loses focus, update the global state
   const handlePointValueBlur = (indexToChange: number) => {
      const value = pointInputValues[indexToChange];
      const parsedValue = parseInt(value, 10);
 
      setQuizState(prev => {
         if (!prev) return null;
-        const numericPointValues = prev.pointValues.filter((v): v is number => typeof v === 'number');
+        
+        const currentNumericValues = prev.pointValues.filter((v): v is number => typeof v === 'number');
+
         if (!isNaN(parsedValue)) {
-            numericPointValues[indexToChange] = parsedValue;
+            // Update the existing value
+            currentNumericValues[indexToChange] = parsedValue;
         } else {
-             numericPointValues.splice(indexToChange, 1);
+            // If invalid, remove it from the array
+            currentNumericValues.splice(indexToChange, 1);
         }
         
+        // Re-combine with the 'WICKET' value
         const wicketValue = prev.pointValues.find(v => v === 'WICKET');
-        const newPointValues = [...numericPointValues.filter(v => !isNaN(v))];
+        const newPointValues = [...currentNumericValues];
         if(wicketValue) newPointValues.push(wicketValue);
 
         return { ...prev, pointValues: newPointValues };
      });
   };
 
-
+  // Add a new point value input field
   const addPointValue = () => {
-    setPointInputValues(prev => [...prev, '']);
+    setQuizState(prev => {
+        if (!prev) return null;
+        const numericPointValues = prev.pointValues.filter((v): v is number => typeof v === 'number');
+        numericPointValues.push(0); // Add a new value, e.g., 0 as a default
+        
+        const wicketValue = prev.pointValues.find(v => v === 'WICKET');
+        const newPointValues = [...numericPointValues];
+        if (wicketValue) newPointValues.push(wicketValue);
+        
+        return { ...prev, pointValues: newPointValues };
+    });
   };
 
+  // Remove a point value from the global state
   const removePointValue = (indexToRemove: number) => {
     setQuizState(prev => {
         if (!prev) return null;
