@@ -12,11 +12,10 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef } from 'react';
-import { Lock } from 'lucide-react';
 
 export function ScoringGrid() {
-  const { quizState, setQuizState, calculateTotalWickets } = useQuiz();
-  const { scores, activeCell, teamNames, numQuestions, teamsOut } = quizState;
+  const { quizState, setQuizState } = useQuiz();
+  const { scores, activeCell, teamNames, numQuestions } = quizState;
   const activeCellRef = useRef<HTMLTableCellElement>(null);
   
   const numTeams = teamNames?.length || 0;
@@ -34,10 +33,6 @@ export function ScoringGrid() {
   const handleCellClick = (question: number, team: number) => {
     if (question > numQuestions) return;
 
-    if (teamsOut[team]) {
-        return; // Don't allow selecting cells for teams that are out
-    }
-
     setQuizState(prev => ({
       ...prev,
       activeCell: { question, team }
@@ -51,8 +46,7 @@ export function ScoringGrid() {
           <TableRow>
             <TableHead className="w-[100px] font-headline">Ball</TableHead>
             {teamNames && teamNames.map((name, teamIndex) => (
-              <TableHead key={teamIndex} className={cn("text-center font-headline", teamsOut[teamIndex] && "text-muted-foreground line-through")}>
-                {teamsOut[teamIndex] && <Lock className="h-4 w-4 inline-block mr-2" />}
+              <TableHead key={teamIndex} className="text-center font-headline">
                 {name}
               </TableHead>
             ))}
@@ -66,7 +60,6 @@ export function ScoringGrid() {
                 const isActive =
                   activeCell?.question === questionIndex && activeCell?.team === teamIndex;
                 const score = scores[questionIndex]?.[teamIndex];
-                const isTeamOut = teamsOut[teamIndex];
 
                 let displayValue = '-';
                 if (score) {
@@ -82,12 +75,11 @@ export function ScoringGrid() {
                     key={teamIndex}
                     ref={isActive ? activeCellRef : null}
                     className={cn(
-                      'text-center font-mono text-lg transition-all duration-200',
+                      'text-center font-mono text-lg transition-all duration-200 cursor-pointer hover:bg-muted/50',
                       isActive && 'bg-accent/20 ring-2 ring-accent rounded-md',
                       score !== undefined ? 'font-bold' : 'text-muted-foreground',
                       score?.isWicket && 'text-destructive',
-                      questionIndex > numQuestions && 'cursor-not-allowed',
-                      isTeamOut ? 'cursor-not-allowed bg-muted/30 text-muted-foreground' : 'cursor-pointer hover:bg-muted/50'
+                      questionIndex > numQuestions && 'cursor-not-allowed'
                     )}
                     onClick={() => handleCellClick(questionIndex, teamIndex)}
                   >

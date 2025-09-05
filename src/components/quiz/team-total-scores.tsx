@@ -5,7 +5,6 @@ import { useQuiz } from '@/contexts/quiz-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { Lock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type PreviewScore = {
@@ -15,17 +14,15 @@ type PreviewScore = {
   height: number;
 };
 
-const TeamScoreCard = ({ name, runs, wickets, isCompact, isOut }: { name: string; runs: number; wickets: number, isCompact: boolean, isOut: boolean }) => (
+const TeamScoreCard = ({ name, runs, wickets, isCompact }: { name: string; runs: number; wickets: number, isCompact: boolean }) => (
     <Card
       className={cn(
         "shadow-lg transition-all duration-300 hover:shadow-2xl relative overflow-hidden w-full",
-         isCompact ? 'sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.666rem)] lg:w-[calc(25%-0.75rem)] xl:w-[calc(20%-0.8rem)]' : 'sm:w-[calc(50%-1rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.125rem)]',
-         isOut && "bg-muted/50 opacity-70"
+         isCompact ? 'sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.666rem)] lg:w-[calc(25%-0.75rem)] xl:w-[calc(20%-0.8rem)]' : 'sm:w-[calc(50%-1rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.125rem)]'
       )}
     >
       <CardHeader className="relative">
         <CardTitle className="text-2xl font-headline text-center">
-            {isOut && <Lock className="inline-block h-5 w-5 mr-2" />}
             {name}
         </CardTitle>
       </CardHeader>
@@ -58,15 +55,17 @@ export function TeamTotalScores() {
   useEffect(() => {
     // This effect runs only on the client, after the initial render.
     // This prevents hydration errors by ensuring Math.random() is not run on the server.
-    setPreviewScores(
-      Array.from({ length: 4 }).map((_, i) => ({
-        name: `Team ${i + 1}`,
-        runs: Math.floor(Math.random() * 200),
-        wickets: Math.floor(Math.random() * 10),
-        height: Math.random() * 60 + 20, 
-      }))
-    );
-  }, []);
+    if (isLoaded && quizState && quizState.numTeams === 0) {
+      setPreviewScores(
+        Array.from({ length: 4 }).map((_, i) => ({
+          name: `Team ${i + 1}`,
+          runs: Math.floor(Math.random() * 200),
+          wickets: Math.floor(Math.random() * 10),
+          height: Math.random() * 60 + 20, 
+        }))
+      );
+    }
+  }, [isLoaded, quizState]);
 
   // Use a consistent default for server render and initial client render
   const settings = quizState?.monitorSettings || { compact: false };
@@ -92,7 +91,7 @@ export function TeamTotalScores() {
     );
   }
   
-  const { numTeams, scores, rounds, teamNames, monitorSettings, teamsOut } = quizState;
+  const { numTeams, scores, rounds, teamNames, monitorSettings } = quizState;
   
   if (numTeams === 0) {
     // Once mounted on the client and if numTeams is 0, show the randomized preview scores.
@@ -113,7 +112,6 @@ export function TeamTotalScores() {
                         runs={preview.runs}
                         wickets={preview.wickets}
                         isCompact={monitorSettings.compact}
-                        isOut={false}
                     />
                 ))}
             </div>
@@ -160,7 +158,6 @@ export function TeamTotalScores() {
                     runs={total.runs}
                     wickets={total.wickets}
                     isCompact={monitorSettings.compact}
-                    isOut={teamsOut[index]}
                 />
             ))}
             </div>

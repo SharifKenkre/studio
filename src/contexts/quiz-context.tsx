@@ -21,7 +21,6 @@ export type QuizState = {
   numQuestions: number; // Represents balls in the current over
   rounds: { name: string; scores: Record<number, Record<number, Score>> }[];
   pointValues: (number | 'WICKET')[];
-  teamsOut: boolean[]; // index corresponds to team index
   monitorSettings: {
     theme: string;
     compact: boolean;
@@ -40,7 +39,6 @@ export const initialState: Omit<QuizState, 'id' | 'monitorHeartbeat'> = {
   numQuestions: 0,
   rounds: [],
   pointValues: [0, 1, 2, 3, 4, 6, 'WICKET'],
-  teamsOut: [],
   monitorSettings: {
     theme: 'default',
     compact: false,
@@ -59,7 +57,6 @@ type QuizContextType = {
   createQuiz: () => string;
   loadQuiz: (id: string) => void;
   isLoaded: boolean;
-  calculateTotalWickets: (teamIndex: number) => number;
 };
 
 const QuizContext = createContext<QuizContextType | undefined>(undefined);
@@ -73,7 +70,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
     const newState: QuizState = {
       id: newId,
       ...initialState,
-      monitorHeartbeat: 0, // Initialize with 0 instead of Date.now()
+      monitorHeartbeat: 0,
     };
     setQuizId(newId);
     setQuizState(newState); // This will also write to Firestore
@@ -83,35 +80,9 @@ export function QuizProvider({ children }: { children: ReactNode }) {
   const loadQuiz = (id: string) => {
     setQuizId(id);
   };
-  
-  const calculateTotalWickets = (teamIndex: number) => {
-    if (!quizState) return 0;
-    
-    let totalWickets = 0;
-    const { rounds, scores } = quizState;
-
-    // Wickets from previous rounds
-    (rounds || []).forEach(round => {
-      Object.values(round.scores).forEach(questionScores => {
-        if (questionScores[teamIndex]?.isWicket) {
-          totalWickets++;
-        }
-      });
-    });
-
-    // Wickets from current over
-    Object.values(scores).forEach(questionScores => {
-      if (questionScores[teamIndex]?.isWicket) {
-        totalWickets++;
-      }
-    });
-
-    return totalWickets;
-  };
-
 
   return (
-    <QuizContext.Provider value={{ quizState, setQuizState, createQuiz, loadQuiz, isLoaded, calculateTotalWickets }}>
+    <QuizContext.Provider value={{ quizState, setQuizState, createQuiz, loadQuiz, isLoaded }}>
       {children}
     </QuizContext.Provider>
   );
