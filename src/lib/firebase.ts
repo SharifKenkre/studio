@@ -5,14 +5,13 @@ import { getFirestore } from "firebase/firestore";
 // Your web app's Firebase configuration
 // This is a public configuration and is safe to be exposed
 const firebaseConfig = {
-  apiKey: "AIzaSyB1vGZC0dyp9q7RNgfeeSWkw0qaA_5C9Js",
-  authDomain: "tql-100.firebaseapp.com",
-  databaseURL: "https://tql-100-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "tql-100",
-  storageBucket: "tql-100.firebasestorage.app",
-  messagingSenderId: "881956282974",
-  appId: "1:881956282974:web:14b556c039ce5c003e8acf",
-  measurementId: "G-4XX8SKYX1S"
+  apiKey: "AIzaSyC26sN44D-n4sdieEvZTraVU-6tL6srpTU",
+  authDomain: "for-v5-quiz-project.firebaseapp.com",
+  projectId: "for-v5-quiz-project",
+  storageBucket: "for-v5-quiz-project.firebasestorage.app",
+  messagingSenderId: "201031107326",
+  appId: "1:201031107326:web:a42c05237cc4bcd5171baf",
+  measurementId: "G-26S84L84XN"
 };
 
 // Initialize Firebase
@@ -20,3 +19,4 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export { app, db };
+

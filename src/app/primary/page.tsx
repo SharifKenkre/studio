@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useQuiz, type Score } from '@/contexts/quiz-context';
+import { useQuiz, type Score, type QuizState } from '@/contexts/quiz-context';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -30,6 +30,25 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { PingIndicator } from '@/components/quiz/ping-indicator';
+
+const getWicketsForTeam = (teamIndex: number, rounds: QuizState['rounds'], scores: QuizState['scores']): number => {
+    let totalWickets = 0;
+    
+    const processScores = (scoreData: Record<number, Record<number, any>>) => {
+        Object.values(scoreData).forEach(questionScores => {
+            const score = questionScores[teamIndex];
+            if (score && score.isWicket) {
+                totalWickets += 1;
+            }
+        });
+    };
+
+    (rounds || []).forEach(round => processScores(round.scores));
+    processScores(scores);
+    
+    return totalWickets;
+};
+
 
 export default function PrimaryPage() {
   const { quizState, setQuizState, loadQuiz, isLoaded } = useQuiz();
@@ -101,32 +120,48 @@ export default function PrimaryPage() {
 
     setQuizState((prev) => {
       if (!prev) return null;
-      const newScores = { ...prev.scores };
 
+      const advanceToNextAvailableCell = (currentTeam: number, currentQuestion: number, scores: QuizState['scores'], rounds: QuizState['rounds'], numTeams: number) => {
+          let nextTeam = currentTeam + 1;
+          let nextQuestion = currentQuestion;
+
+          // Find the next team that is not out
+          while (nextTeam < numTeams && getWicketsForTeam(nextTeam, rounds, scores) >= 10) {
+              nextTeam++;
+          }
+
+          if (nextTeam >= numTeams) {
+              nextTeam = 0;
+              nextQuestion = currentQuestion + 1;
+               while (nextTeam < numTeams && getWicketsForTeam(nextTeam, rounds, scores) >= 10) {
+                  nextTeam++;
+              }
+          }
+          
+          return { question: nextQuestion, team: nextTeam };
+      };
+
+      const wicketsForTeam = getWicketsForTeam(team, prev.rounds, prev.scores);
+      
       const score: Score = {
         runs: points === 'WICKET' ? 0 : points,
         isWicket: points === 'WICKET',
       };
       
+      // If team is already out, assign 0 runs and move on
+      if (wicketsForTeam >= 10) {
+          score.runs = 0;
+          score.isWicket = false;
+      }
+
+      const newScores = { ...prev.scores };
       if (!newScores[question]) {
         newScores[question] = {};
       }
       newScores[question][team] = score;
-
-      let nextTeam = team + 1;
-      let nextQuestion = question;
-      let newNumQuestions = prev.numQuestions;
-
-      if (nextTeam >= prev.numTeams) {
-        nextTeam = 0;
-        nextQuestion = question + 1;
-      }
       
-      if (nextQuestion > newNumQuestions) {
-          newNumQuestions = nextQuestion;
-      }
-      
-      const newActiveCell = { question: nextQuestion, team: nextTeam };
+      const newActiveCell = advanceToNextAvailableCell(team, question, newScores, prev.rounds, prev.numTeams);
+      const newNumQuestions = Math.max(prev.numQuestions, newActiveCell.question);
 
       return { ...prev, scores: newScores, activeCell: newActiveCell, numQuestions: newNumQuestions };
     });
@@ -143,9 +178,16 @@ export default function PrimaryPage() {
             newScores[currentQuestion] = {};
         }
         
-        const nextQuestion = currentQuestion + 1;
+        let nextQuestion = currentQuestion + 1;
+        let nextTeam = 0;
+
+        // Skip any teams that are out at the start of the new "ball"
+        while (nextTeam < prev.numTeams && getWicketsForTeam(nextTeam, prev.rounds, newScores) >= 10) {
+            nextTeam++;
+        }
+
         const newNumQuestions = Math.max(prev.numQuestions, nextQuestion);
-        const newActiveCell = { question: nextQuestion, team: 0 };
+        const newActiveCell = { question: nextQuestion, team: nextTeam };
 
         return {
             ...prev,
@@ -169,11 +211,16 @@ export default function PrimaryPage() {
         scores: prev.scores
       };
       
+      let nextTeam = 0;
+      while (nextTeam < prev.numTeams && getWicketsForTeam(nextTeam, [...(prev.rounds || []), roundToAdd], {}) >= 10) {
+          nextTeam++;
+      }
+
       return {
         ...prev,
         rounds: [...(prev.rounds || []), roundToAdd],
         scores: {},
-        activeCell: { question: 0, team: 0 },
+        activeCell: { question: 0, team: nextTeam },
         numQuestions: 0,
       };
     });
@@ -282,3 +329,5 @@ export default function PrimaryPage() {
     </div>
   )
 }
+
+    
