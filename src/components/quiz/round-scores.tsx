@@ -10,12 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 export function RoundScores() {
   const { quizState } = useQuiz();
-  const { numTeams, rounds, teamNames, scores } = quizState;
+  const { numTeams, rounds, teamNames, scores, monitorSettings } = quizState;
 
   if (!rounds || rounds.length === 0) {
     return null;
@@ -71,11 +71,14 @@ export function RoundScores() {
                         <TableHead className="font-headline">Over</TableHead>
                         {teamNames.map((name, teamIndex) => {
                             const totalWickets = getWicketsForTeam(teamIndex);
+                            const isOut = totalWickets >= 10;
                             return (
                                 <TableHead key={teamIndex} className={cn("text-center font-headline",
-                                    totalWickets >= 10 ? 'text-destructive' : 'text-success'
+                                    isOut ? 'text-destructive' : 'text-success',
+                                    isOut && (monitorSettings.theme === 'dark' ? 'theme-light' : 'theme-dark')
                                 )}>
                                     {name}
+                                    {isOut && <div className="text-xs font-normal">(all out)</div>}
                                 </TableHead>
                             )
                         })}
@@ -85,11 +88,20 @@ export function RoundScores() {
                     {rounds.map((round, roundIndex) => (
                         <TableRow key={roundIndex}>
                         <TableCell className="font-medium font-headline">{round.name}</TableCell>
-                        {roundTotals[roundIndex].map((total, teamIndex) => (
-                            <TableCell key={teamIndex} className="text-center font-mono text-lg">
-                                {total.runs}/{total.wickets}
-                            </TableCell>
-                        ))}
+                        {roundTotals[roundIndex].map((total, teamIndex) => {
+                            const totalWickets = getWicketsForTeam(teamIndex);
+                             const isOut = totalWickets >= 10;
+                            return (
+                                <TableCell 
+                                    key={teamIndex} 
+                                    className={cn("text-center font-mono text-lg",
+                                        isOut && (monitorSettings.theme === 'dark' ? 'theme-light' : 'theme-dark')
+                                    )}
+                                >
+                                    {total.runs}/{total.wickets}
+                                </TableCell>
+                            )
+                        })}
                         </TableRow>
                     ))}
                     </TableBody>

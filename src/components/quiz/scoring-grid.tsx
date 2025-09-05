@@ -15,7 +15,7 @@ import { useEffect, useRef } from 'react';
 
 export function ScoringGrid() {
   const { quizState, setQuizState } = useQuiz();
-  const { scores, activeCell, teamNames, numQuestions, rounds } = quizState;
+  const { scores, activeCell, teamNames, numQuestions, rounds, monitorSettings } = quizState;
   const activeCellRef = useRef<HTMLTableCellElement>(null);
   
   const numTeams = teamNames?.length || 0;
@@ -65,11 +65,14 @@ export function ScoringGrid() {
             <TableHead className="w-[100px] font-headline">Ball</TableHead>
             {teamNames && teamNames.map((name, teamIndex) => {
                 const totalWickets = getWicketsForTeam(teamIndex);
+                const isOut = totalWickets >= 10;
                 return (
                   <TableHead key={teamIndex} className={cn("text-center font-headline",
-                    totalWickets >= 10 ? 'text-destructive' : 'text-success'
+                    isOut ? 'text-destructive' : 'text-success',
+                    isOut && (monitorSettings.theme === 'dark' ? 'theme-light' : 'theme-dark')
                   )}>
                     {name}
+                    {isOut && <div className="text-xs font-normal">(all out)</div>}
                   </TableHead>
                 )
             })}
@@ -83,6 +86,9 @@ export function ScoringGrid() {
                 const isActive =
                   activeCell?.question === questionIndex && activeCell?.team === teamIndex;
                 const score = scores[questionIndex]?.[teamIndex];
+
+                const totalWickets = getWicketsForTeam(teamIndex);
+                const isOut = totalWickets >= 10;
 
                 let displayValue = '-';
                 if (score) {
@@ -102,7 +108,8 @@ export function ScoringGrid() {
                       isActive && 'bg-accent/20 ring-2 ring-accent rounded-md',
                       score !== undefined ? 'font-bold' : 'text-muted-foreground',
                       score?.isWicket && 'text-destructive',
-                      questionIndex > numQuestions && 'cursor-not-allowed'
+                      questionIndex > numQuestions && 'cursor-not-allowed',
+                      isOut && (monitorSettings.theme === 'dark' ? 'theme-light' : 'theme-dark')
                     )}
                     onClick={() => handleCellClick(questionIndex, teamIndex)}
                   >

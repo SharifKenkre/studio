@@ -2,7 +2,7 @@
 'use client';
 
 import { useQuiz } from '@/contexts/quiz-context';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,20 +14,22 @@ type PreviewScore = {
   height: number;
 };
 
-const TeamScoreCard = ({ name, runs, wickets, isCompact, isOut }: { name: string; runs: number; wickets: number, isCompact: boolean, isOut: boolean }) => (
+const TeamScoreCard = ({ name, runs, wickets, isCompact, isOut, theme }: { name: string; runs: number; wickets: number, isCompact: boolean, isOut: boolean, theme: string }) => (
     <Card
       className={cn(
         "shadow-lg transition-all duration-300 hover:shadow-2xl relative overflow-hidden w-full",
-         isCompact ? 'sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.666rem)] lg:w-[calc(25%-0.75rem)] xl:w-[calc(20%-0.8rem)]' : 'sm:w-[calc(50%-1rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.125rem)]'
+         isCompact ? 'sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.666rem)] lg:w-[calc(25%-0.75rem)] xl:w-[calc(20%-0.8rem)]' : 'sm:w-[calc(50%-1rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.125rem)]',
+         isOut && (theme === 'dark' ? 'theme-light' : 'theme-dark')
       )}
     >
-      <CardHeader className="relative">
+      <CardHeader className="relative text-center">
         <CardTitle className={cn(
-            "text-2xl font-headline text-center",
+            "text-2xl font-headline",
             isOut ? "text-destructive" : "text-success"
         )}>
             {name}
         </CardTitle>
+        {isOut && <CardDescription>(all out)</CardDescription>}
       </CardHeader>
       <CardContent className="relative text-center">
         <p className={cn(
@@ -76,7 +78,7 @@ export function TeamTotalScores() {
   }, [isLoaded, quizState, previewScores]);
 
   // Use a consistent default for server render and initial client render
-  const settings = quizState?.monitorSettings || { compact: false };
+  const settings = quizState?.monitorSettings || { compact: false, theme: 'default' };
 
   const containerClasses = cn(
     'flex flex-wrap justify-center',
@@ -121,6 +123,7 @@ export function TeamTotalScores() {
                         wickets={preview.wickets}
                         isCompact={monitorSettings.compact}
                         isOut={preview.wickets >= 10}
+                        theme={monitorSettings.theme}
                     />
                 ))}
             </div>
@@ -168,6 +171,7 @@ export function TeamTotalScores() {
                     wickets={total.wickets}
                     isCompact={monitorSettings.compact}
                     isOut={total.wickets >= 10}
+                    theme={monitorSettings.theme}
                 />
             ))}
             </div>
