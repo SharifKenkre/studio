@@ -73,7 +73,7 @@ export function QuizProvider({ children }: { children: ReactNode }) {
     const newState: QuizState = {
       id: newId,
       ...initialState,
-      monitorHeartbeat: Date.now(),
+      monitorHeartbeat: 0, // Initialize with 0 instead of Date.now()
     };
     setQuizId(newId);
     setQuizState(newState); // This will also write to Firestore
