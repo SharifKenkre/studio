@@ -14,7 +14,7 @@ type PreviewScore = {
   height: number;
 };
 
-const TeamScoreCard = ({ name, runs, wickets, isCompact }: { name: string; runs: number; wickets: number, isCompact: boolean }) => (
+const TeamScoreCard = ({ name, runs, wickets, isCompact, isOut }: { name: string; runs: number; wickets: number, isCompact: boolean, isOut: boolean }) => (
     <Card
       className={cn(
         "shadow-lg transition-all duration-300 hover:shadow-2xl relative overflow-hidden w-full",
@@ -22,7 +22,10 @@ const TeamScoreCard = ({ name, runs, wickets, isCompact }: { name: string; runs:
       )}
     >
       <CardHeader className="relative">
-        <CardTitle className="text-2xl font-headline text-center">
+        <CardTitle className={cn(
+            "text-2xl font-headline text-center",
+            isOut ? "text-destructive" : "text-success"
+        )}>
             {name}
         </CardTitle>
       </CardHeader>
@@ -53,6 +56,11 @@ export function TeamTotalScores() {
   const [previewScores, setPreviewScores] = useState<PreviewScore[]>([]);
 
   useEffect(() => {
+    if (!isLoaded && quizState && quizState.numTeams > 0) return;
+    
+    const hasExistingPreview = previewScores && previewScores.length > 0;
+    if (hasExistingPreview) return;
+    
     // This effect runs only on the client, after the initial render.
     // This prevents hydration errors by ensuring Math.random() is not run on the server.
     if (isLoaded && quizState && quizState.numTeams === 0) {
@@ -65,7 +73,7 @@ export function TeamTotalScores() {
         }))
       );
     }
-  }, [isLoaded, quizState]);
+  }, [isLoaded, quizState, previewScores]);
 
   // Use a consistent default for server render and initial client render
   const settings = quizState?.monitorSettings || { compact: false };
@@ -112,6 +120,7 @@ export function TeamTotalScores() {
                         runs={preview.runs}
                         wickets={preview.wickets}
                         isCompact={monitorSettings.compact}
+                        isOut={preview.wickets >= 10}
                     />
                 ))}
             </div>
@@ -158,6 +167,7 @@ export function TeamTotalScores() {
                     runs={total.runs}
                     wickets={total.wickets}
                     isCompact={monitorSettings.compact}
+                    isOut={total.wickets >= 10}
                 />
             ))}
             </div>

@@ -15,7 +15,7 @@ import { useEffect, useRef } from 'react';
 
 export function ScoringGrid() {
   const { quizState, setQuizState } = useQuiz();
-  const { scores, activeCell, teamNames, numQuestions } = quizState;
+  const { scores, activeCell, teamNames, numQuestions, rounds } = quizState;
   const activeCellRef = useRef<HTMLTableCellElement>(null);
   
   const numTeams = teamNames?.length || 0;
@@ -39,17 +39,40 @@ export function ScoringGrid() {
     }));
   };
 
+  const getWicketsForTeam = (teamIndex: number): number => {
+    let totalWickets = 0;
+    
+    const processScores = (scoreData: Record<number, Record<number, any>>) => {
+        Object.values(scoreData).forEach(questionScores => {
+            const score = questionScores[teamIndex];
+            if (score && score.isWicket) {
+                totalWickets += 1;
+            }
+        });
+    };
+
+    (rounds || []).forEach(round => processScores(round.scores));
+    processScores(scores);
+    
+    return totalWickets;
+  };
+
   return (
     <div className="border rounded-lg overflow-hidden bg-card">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px] font-headline">Ball</TableHead>
-            {teamNames && teamNames.map((name, teamIndex) => (
-              <TableHead key={teamIndex} className="text-center font-headline">
-                {name}
-              </TableHead>
-            ))}
+            {teamNames && teamNames.map((name, teamIndex) => {
+                const totalWickets = getWicketsForTeam(teamIndex);
+                return (
+                  <TableHead key={teamIndex} className={cn("text-center font-headline",
+                    totalWickets >= 10 ? 'text-destructive' : 'text-success'
+                  )}>
+                    {name}
+                  </TableHead>
+                )
+            })}
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -15,12 +15,30 @@ import { cn } from '@/lib/utils';
 
 export function RoundScores() {
   const { quizState } = useQuiz();
-  const { numTeams, rounds, teamNames } = quizState;
+  const { numTeams, rounds, teamNames, scores } = quizState;
 
   if (!rounds || rounds.length === 0) {
     return null;
   }
   
+  const getWicketsForTeam = (teamIndex: number): number => {
+    let totalWickets = 0;
+    
+    const processScores = (scoreData: Record<number, Record<number, any>>) => {
+        Object.values(scoreData).forEach(questionScores => {
+            const score = questionScores[teamIndex];
+            if (score && score.isWicket) {
+                totalWickets += 1;
+            }
+        });
+    };
+
+    (rounds || []).forEach(round => processScores(round.scores));
+    processScores(scores);
+    
+    return totalWickets;
+  };
+
   const roundTotals = rounds.map(round => {
     return Array.from({ length: numTeams }, (_, teamIndex) => {
       let totalRuns = 0;
@@ -51,11 +69,16 @@ export function RoundScores() {
                     <TableHeader>
                     <TableRow>
                         <TableHead className="font-headline">Over</TableHead>
-                        {teamNames.map((name, teamIndex) => (
-                        <TableHead key={teamIndex} className="text-center font-headline">
-                            {name}
-                        </TableHead>
-                        ))}
+                        {teamNames.map((name, teamIndex) => {
+                            const totalWickets = getWicketsForTeam(teamIndex);
+                            return (
+                                <TableHead key={teamIndex} className={cn("text-center font-headline",
+                                    totalWickets >= 10 ? 'text-destructive' : 'text-success'
+                                )}>
+                                    {name}
+                                </TableHead>
+                            )
+                        })}
                     </TableRow>
                     </TableHeader>
                     <TableBody>
