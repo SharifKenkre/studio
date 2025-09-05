@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { QuizLabsLogo } from '@/components/quiz/quiz-labs-logo';
 
 export default function MonitorPage() {
-  const { quizState, loadQuiz, isLoaded } = useQuiz();
+  const { quizState, setQuizState, loadQuiz, isLoaded } = useQuiz();
   const [inputCode, setInputCode] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const { toast } = useToast();
@@ -46,6 +46,23 @@ export default function MonitorPage() {
         });
     }
   }, [isLoaded, quizState, toast]);
+
+  useEffect(() => {
+      // This is the heartbeat effect. It tells the primary device that the monitor is active.
+      if (isConnected && quizState) {
+          const intervalId = setInterval(() => {
+              setQuizState(prev => {
+                  if (!prev) return null;
+                  return {
+                      ...prev,
+                      monitorHeartbeat: Date.now()
+                  }
+              });
+          }, 5000); // Update every 5 seconds
+
+          return () => clearInterval(intervalId);
+      }
+  }, [isConnected, quizState, setQuizState]);
   
   if (!isConnected) {
     return (

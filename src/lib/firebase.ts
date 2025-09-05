@@ -5,12 +5,14 @@ import { getFirestore } from "firebase/firestore";
 // Your web app's Firebase configuration
 // This is a public configuration and is safe to be exposed
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyB1vGZC0dyp9q7RNgfeeSWkw0qaA_5C9Js",
+  authDomain: "tql-100.firebaseapp.com",
+  databaseURL: "https://tql-100-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "tql-100",
+  storageBucket: "tql-100.firebasestorage.app",
+  messagingSenderId: "881956282974",
+  appId: "1:881956282974:web:14b556c039ce5c003e8acf",
+  measurementId: "G-4XX8SKYX1S"
 };
 
 // Initialize Firebase

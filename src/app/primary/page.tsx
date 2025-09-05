@@ -40,6 +40,7 @@ export default function PrimaryPage() {
   
   const [roundName, setRoundName] = useState('');
   const [isEndRoundAlertOpen, setIsEndRoundAlertOpen] = useState(false);
+  const [isMonitorConnected, setIsMonitorConnected] = useState(false);
 
   useEffect(() => {
     const id = searchParams.get('id');
@@ -50,6 +51,16 @@ export default function PrimaryPage() {
         router.push('/');
     }
   }, [searchParams, loadQuiz, router]);
+
+  useEffect(() => {
+      if (quizState?.monitorHeartbeat) {
+          const timeSinceHeartbeat = Date.now() - quizState.monitorHeartbeat;
+          // If the last heartbeat was less than 10 seconds ago, we consider it connected.
+          setIsMonitorConnected(timeSinceHeartbeat < 10000);
+      } else {
+          setIsMonitorConnected(false);
+      }
+  }, [quizState?.monitorHeartbeat]);
 
 
   const handleNewCode = () => {
@@ -213,7 +224,6 @@ export default function PrimaryPage() {
                         {quizState.id}
                     </p>
                     <Button variant="ghost" size="icon" onClick={handleCopyCode}><Copy className="h-5 w-5"/></Button>
-                    <Button variant="ghost" size="icon" onClick={handleNewCode}><RefreshCw className="h-5 w-5"/></Button>
                 </div>
             </div>
             <form className="space-y-4" onSubmit={handleSetTeams}>
@@ -234,7 +244,7 @@ export default function PrimaryPage() {
       <header className="flex-shrink-0 flex items-center justify-between">
         <h1 className="text-2xl font-bold font-headline">Scoring</h1>
         <div className="flex items-center gap-4">
-            <PingIndicator isConnected={true} />
+            <PingIndicator isConnected={isMonitorConnected} />
              <div className="text-right">
                 <p className="text-sm text-muted-foreground">Current Over</p>
                 <p className="font-bold">{quizState.numQuestions} Balls</p>
