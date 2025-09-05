@@ -31,21 +31,19 @@ export default function MonitorPage() {
   };
 
   useEffect(() => {
-    if (isLoaded && quizState) {
+    if (!isLoaded) return;
+    
+    if(quizState && !isConnected) {
         setIsConnected(true);
         toast({
             title: 'Successfully Connected!',
             description: `Now displaying scores for quiz ${quizState.id}.`,
         });
-    } else if (isLoaded && !quizState) {
+    } else if (!quizState) {
         setIsConnected(false);
-        toast({
-            variant: 'destructive',
-            title: 'Connection Failed',
-            description: 'Could not find a quiz with that code. Please try again.',
-        });
     }
-  }, [isLoaded, quizState, toast]);
+
+  }, [isLoaded, quizState, isConnected, toast]);
 
   useEffect(() => {
       // This is the heartbeat effect. It tells the primary device that the monitor is active.
