@@ -29,7 +29,6 @@ const TeamScoreCard = ({ name, runs, wickets, isCompact, isOut, theme }: { name:
         )}>
             {name}
         </CardTitle>
-        {isOut && <CardDescription>(all out)</CardDescription>}
       </CardHeader>
       <CardContent className="relative text-center">
         <p className={cn(

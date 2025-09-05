@@ -72,7 +72,6 @@ export function ScoringGrid() {
                     isOut && (monitorSettings.theme === 'dark' ? 'theme-light' : 'theme-dark')
                   )}>
                     {name}
-                    {isOut && <div className="text-xs font-normal">(all out)</div>}
                   </TableHead>
                 )
             })}
