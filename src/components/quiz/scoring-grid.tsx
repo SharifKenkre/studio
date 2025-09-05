@@ -39,14 +39,18 @@ export function ScoringGrid() {
     }));
   };
 
-  const getWicketsForTeam = (teamIndex: number): number => {
+ const getTeamTotals = (teamIndex: number): { runs: number; wickets: number } => {
+    let totalRuns = 0;
     let totalWickets = 0;
-    
+
     const processScores = (scoreData: Record<number, Record<number, any>>) => {
         Object.values(scoreData).forEach(questionScores => {
             const score = questionScores[teamIndex];
-            if (score && score.isWicket) {
-                totalWickets += 1;
+            if (score) {
+                totalRuns += score.runs || 0;
+                if (score.isWicket) {
+                    totalWickets += 1;
+                }
             }
         });
     };
@@ -54,7 +58,7 @@ export function ScoringGrid() {
     (rounds || []).forEach(round => processScores(round.scores));
     processScores(scores);
     
-    return totalWickets;
+    return { runs: totalRuns, wickets: totalWickets };
   };
 
   return (
@@ -64,14 +68,14 @@ export function ScoringGrid() {
           <TableRow>
             <TableHead className="w-[100px] font-headline">Ball</TableHead>
             {teamNames && teamNames.map((name, teamIndex) => {
-                const totalWickets = getWicketsForTeam(teamIndex);
-                const isOut = totalWickets >= 10;
+                const totals = getTeamTotals(teamIndex);
+                const isOut = totals.wickets >= 10;
                 return (
                   <TableHead key={teamIndex} className={cn("text-center font-headline",
                     isOut ? 'text-destructive' : 'text-success',
                     isOut && (monitorSettings.theme === 'dark' ? 'theme-light' : 'theme-dark')
                   )}>
-                    {name}
+                    {name} ({totals.runs}/{totals.wickets})
                   </TableHead>
                 )
             })}
@@ -86,7 +90,7 @@ export function ScoringGrid() {
                   activeCell?.question === questionIndex && activeCell?.team === teamIndex;
                 const score = scores[questionIndex]?.[teamIndex];
 
-                const totalWickets = getWicketsForTeam(teamIndex);
+                const totalWickets = getTeamTotals(teamIndex).wickets;
                 const isOut = totalWickets >= 10;
 
                 let displayValue = '-';
